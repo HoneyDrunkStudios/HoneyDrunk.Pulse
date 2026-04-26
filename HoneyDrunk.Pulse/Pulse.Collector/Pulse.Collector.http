@@ -1,0 +1,35 @@
+@Pulse.Collector_HostAddress = http://localhost:5077
+
+### Liveness probe
+GET {{Pulse.Collector_HostAddress}}/health
+Accept: application/json
+
+### Readiness probe
+GET {{Pulse.Collector_HostAddress}}/health/ready
+Accept: application/json
+
+### OTLP traces (HTTP/JSON)
+POST {{Pulse.Collector_HostAddress}}/otlp/v1/traces
+Content-Type: application/json
+
+{
+  "resourceSpans": []
+}
+
+### OTLP metrics (HTTP/JSON)
+POST {{Pulse.Collector_HostAddress}}/otlp/v1/metrics
+Content-Type: application/json
+
+{
+  "resourceMetrics": []
+}
+
+### OTLP logs (HTTP/JSON)
+POST {{Pulse.Collector_HostAddress}}/otlp/v1/logs
+Content-Type: application/json
+
+{
+  "resourceLogs": []
+}
+
+###

@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Package Metadata -->
+    <PackageId>HoneyDrunk.Telemetry.Abstractions</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>HoneyDrunk Studios</Authors>
+    <Description>Pure abstractions for HoneyDrunk telemetry sinks and instrumentation. Defines ITraceSink, ILogSink, IMetricsSink, IAnalyticsSink, IErrorSink, and telemetry event models.</Description>
+    <PackageReleaseNotes>v0.1.0: Initial release. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageTags>telemetry;abstractions;sinks;traces;logs;metrics;analytics;errors;observability</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/HoneyDrunkStudios/HoneyDrunk.Pulse</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/HoneyDrunkStudios/HoneyDrunk.Pulse</PackageProjectUrl>
+
+    <!-- Symbol Package Configuration -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="CHANGELOG.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HoneyDrunk.Kernel.Abstractions" Version="0.4.0" />
+    <PackageReference Include="HoneyDrunk.Standards" Version="0.2.7">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.202" />
+  </ItemGroup>
+
+</Project>

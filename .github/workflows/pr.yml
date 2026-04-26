@@ -1,0 +1,34 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-core:
+    name: PR Core
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      security-events: write  # CodeQL SARIF upload
+    uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/pr-core.yml@main
+    with:
+      dotnet-version: '10.0.x'
+      configuration: 'Release'
+      runs-on: 'ubuntu-latest'
+      working-directory: 'HoneyDrunk.Pulse'
+      project-path: './HoneyDrunk.Pulse.slnx'
+      enable-secret-scan: true
+      enable-accessibility-check: false
+      post-pr-summary: true
+      # Block the PR on warning+ severity. Notes (style suggestions like .Where over foreach,
+      # generic catches at intentional defensive boundaries, etc.) are still recorded in the
+      # Security tab but don't gate merges — too noisy to be useful as a hard block.
+      codeql-fail-on-severity: 'warning'
+      actions-ref: 'main'
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}

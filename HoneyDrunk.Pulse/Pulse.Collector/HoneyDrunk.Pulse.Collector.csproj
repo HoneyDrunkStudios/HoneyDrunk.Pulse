@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <UserSecretsId>21147e9e-1f4a-444c-8510-a88d59b57ec9</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <RootNamespace>HoneyDrunk.Pulse.Collector</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.76.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.80.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="HoneyDrunk.Kernel" Version="0.4.0" />
+    <PackageReference Include="HoneyDrunk.Standards" Version="0.2.7">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="HoneyDrunk.Transport" Version="0.4.0" />
+    <PackageReference Include="HoneyDrunk.Transport.AzureServiceBus" Version="0.4.0" />
+    <PackageReference Include="HoneyDrunk.Transport.InMemory" Version="0.4.0" />
+    <PackageReference Include="HoneyDrunk.Vault" Version="0.3.0" />
+    <PackageReference Include="HoneyDrunk.Vault.EventGrid" Version="0.3.0" />
+    <PackageReference Include="HoneyDrunk.Vault.Providers.AppConfiguration" Version="0.3.0" />
+    <PackageReference Include="HoneyDrunk.Vault.Providers.AzureKeyVault" Version="0.3.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HoneyDrunk.Pulse.Contracts\HoneyDrunk.Pulse.Contracts.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Abstractions\HoneyDrunk.Telemetry.Abstractions.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.OpenTelemetry\HoneyDrunk.Telemetry.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.AzureMonitor\HoneyDrunk.Telemetry.Sink.AzureMonitor.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.Loki\HoneyDrunk.Telemetry.Sink.Loki.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.Mimir\HoneyDrunk.Telemetry.Sink.Mimir.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.PostHog\HoneyDrunk.Telemetry.Sink.PostHog.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.Sentry\HoneyDrunk.Telemetry.Sink.Sentry.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.Tempo\HoneyDrunk.Telemetry.Sink.Tempo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.202" />
+  </ItemGroup>
+
+  <!-- OpenTelemetry Proto files for gRPC OTLP receiver -->
+  <ItemGroup>
+    <Protobuf Include="Protos\opentelemetry\proto\common\v1\common.proto" ProtoRoot="Protos" GrpcServices="None" />
+    <Protobuf Include="Protos\opentelemetry\proto\resource\v1\resource.proto" ProtoRoot="Protos" GrpcServices="None" />
+    <Protobuf Include="Protos\opentelemetry\proto\trace\v1\trace.proto" ProtoRoot="Protos" GrpcServices="None" />
+    <Protobuf Include="Protos\opentelemetry\proto\metrics\v1\metrics.proto" ProtoRoot="Protos" GrpcServices="None" />
+    <Protobuf Include="Protos\opentelemetry\proto\logs\v1\logs.proto" ProtoRoot="Protos" GrpcServices="None" />
+    <Protobuf Include="Protos\opentelemetry\proto\collector\trace\v1\trace_service.proto" ProtoRoot="Protos" GrpcServices="Server" />
+    <Protobuf Include="Protos\opentelemetry\proto\collector\metrics\v1\metrics_service.proto" ProtoRoot="Protos" GrpcServices="Server" />
+    <Protobuf Include="Protos\opentelemetry\proto\collector\logs\v1\logs_service.proto" ProtoRoot="Protos" GrpcServices="Server" />
+  </ItemGroup>
+
+</Project>
