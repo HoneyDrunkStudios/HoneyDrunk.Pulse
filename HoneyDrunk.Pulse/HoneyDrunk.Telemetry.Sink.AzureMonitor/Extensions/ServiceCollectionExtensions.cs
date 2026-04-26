@@ -83,7 +83,7 @@ public static class ServiceCollectionExtensions
             var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(AzureMonitorSink));
             var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<AzureMonitorSink>>();
 
-            return new AzureMonitorSink(httpClient, options, connectionString, logger);
+            return new AzureMonitorSink(options, connectionString, logger);
         });
 
         // Register Azure Monitor sink under sink abstractions for multi-sink support

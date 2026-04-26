@@ -17,19 +17,12 @@ namespace HoneyDrunk.Pulse.Tests.Transport;
 /// <summary>
 /// Integration tests verifying that Transport events are published when telemetry is ingested.
 /// </summary>
-public class TransportPublishingIntegrationTests : IClassFixture<TransportPublishingIntegrationTests.CollectorWithCapturingPublisher>
+/// <remarks>
+/// Initializes a new instance of the <see cref="TransportPublishingIntegrationTests"/> class.
+/// </remarks>
+/// <param name="factory">The custom web application factory with message capturing.</param>
+public class TransportPublishingIntegrationTests(TransportPublishingIntegrationTests.CollectorWithCapturingPublisher factory) : IClassFixture<TransportPublishingIntegrationTests.CollectorWithCapturingPublisher>
 {
-    private readonly CollectorWithCapturingPublisher _factory;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TransportPublishingIntegrationTests"/> class.
-    /// </summary>
-    /// <param name="factory">The custom web application factory with message capturing.</param>
-    public TransportPublishingIntegrationTests(CollectorWithCapturingPublisher factory)
-    {
-        _factory = factory;
-    }
-
     /// <summary>
     /// Verifies that posting traces via HTTP publishes a PulseIngested event through Transport.
     /// </summary>
@@ -38,8 +31,8 @@ public class TransportPublishingIntegrationTests : IClassFixture<TransportPublis
     public async Task PostTraces_ShouldPublishPulseIngestedEvent()
     {
         // Arrange
-        var client = _factory.CreateClient();
-        _factory.CapturedPublisher.PublishedMessages.Clear();
+        var client = factory.CreateClient();
+        factory.CapturedPublisher.PublishedMessages.Clear();
         using var content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -47,8 +40,8 @@ public class TransportPublishingIntegrationTests : IClassFixture<TransportPublis
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        _factory.CapturedPublisher.PublishedMessages.Should().HaveCount(1);
-        var published = _factory.CapturedPublisher.PublishedMessages.First();
+        factory.CapturedPublisher.PublishedMessages.Should().HaveCount(1);
+        var published = factory.CapturedPublisher.PublishedMessages.First();
         published.Should().BeOfType<PulseIngested>();
 
         var pulseIngested = (PulseIngested)published;
@@ -64,8 +57,8 @@ public class TransportPublishingIntegrationTests : IClassFixture<TransportPublis
     public async Task PostMetrics_ShouldPublishPulseIngestedEvent()
     {
         // Arrange
-        var client = _factory.CreateClient();
-        _factory.CapturedPublisher.PublishedMessages.Clear();
+        var client = factory.CreateClient();
+        factory.CapturedPublisher.PublishedMessages.Clear();
         using var content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -73,8 +66,8 @@ public class TransportPublishingIntegrationTests : IClassFixture<TransportPublis
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        _factory.CapturedPublisher.PublishedMessages.Should().HaveCount(1);
-        var published = _factory.CapturedPublisher.PublishedMessages.First();
+        factory.CapturedPublisher.PublishedMessages.Should().HaveCount(1);
+        var published = factory.CapturedPublisher.PublishedMessages.First();
         published.Should().BeOfType<PulseIngested>();
 
         var pulseIngested = (PulseIngested)published;
@@ -90,8 +83,8 @@ public class TransportPublishingIntegrationTests : IClassFixture<TransportPublis
     public async Task PostLogs_ShouldPublishPulseIngestedEvent()
     {
         // Arrange
-        var client = _factory.CreateClient();
-        _factory.CapturedPublisher.PublishedMessages.Clear();
+        var client = factory.CreateClient();
+        factory.CapturedPublisher.PublishedMessages.Clear();
         using var content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -99,8 +92,8 @@ public class TransportPublishingIntegrationTests : IClassFixture<TransportPublis
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        _factory.CapturedPublisher.PublishedMessages.Should().HaveCount(1);
-        var published = _factory.CapturedPublisher.PublishedMessages.First();
+        factory.CapturedPublisher.PublishedMessages.Should().HaveCount(1);
+        var published = factory.CapturedPublisher.PublishedMessages.First();
         published.Should().BeOfType<PulseIngested>();
 
         var pulseIngested = (PulseIngested)published;
@@ -116,8 +109,8 @@ public class TransportPublishingIntegrationTests : IClassFixture<TransportPublis
     public async Task PostTraces_PulseIngestedShouldContainCorrectMetadata()
     {
         // Arrange
-        var client = _factory.CreateClient();
-        _factory.CapturedPublisher.PublishedMessages.Clear();
+        var client = factory.CreateClient();
+        factory.CapturedPublisher.PublishedMessages.Clear();
         using var content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
         client.DefaultRequestHeaders.Add("X-Source-Service", "test-service");
         client.DefaultRequestHeaders.Add("X-Source-NodeId", "test-node-123");
@@ -127,7 +120,7 @@ public class TransportPublishingIntegrationTests : IClassFixture<TransportPublis
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var published = _factory.CapturedPublisher.PublishedMessages.First();
+        var published = factory.CapturedPublisher.PublishedMessages.First();
         var pulseIngested = published.Should().BeOfType<PulseIngested>().Subject;
 
         pulseIngested.SourceNodeName.Should().Be("test-service");

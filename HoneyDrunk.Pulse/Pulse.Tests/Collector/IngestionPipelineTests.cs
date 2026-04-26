@@ -445,7 +445,7 @@ public class IngestionPipelineTests
 
         public Task CaptureBatchAsync(IEnumerable<TelemetryEvent> events, CancellationToken cancellationToken = default)
         {
-            CapturedBatches.Add(events.ToList());
+            CapturedBatches.Add([.. events]);
             return Task.CompletedTask;
         }
 

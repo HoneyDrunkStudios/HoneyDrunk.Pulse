@@ -16,32 +16,19 @@ namespace HoneyDrunk.Telemetry.Sink.AzureMonitor.Implementation;
 /// This sink implements ITraceSink, ILogSink, and IMetricsSink to allow selective routing
 /// of different signal types to Azure Monitor.
 /// </remarks>
-public sealed partial class AzureMonitorSink : ITraceSink, ILogSink, IMetricsSink, IDisposable
+/// <remarks>
+/// Initializes a new instance of the <see cref="AzureMonitorSink"/> class.
+/// </remarks>
+/// <param name="options">The Azure Monitor sink options.</param>
+/// <param name="connectionString">The Azure Monitor connection string from Vault.</param>
+/// <param name="logger">The logger.</param>
+public sealed partial class AzureMonitorSink(
+    IOptions<AzureMonitorSinkOptions> options,
+    string? connectionString,
+    ILogger<AzureMonitorSink> logger) : ITraceSink, ILogSink, IMetricsSink, IDisposable
 {
-    private readonly HttpClient _httpClient;
-    private readonly AzureMonitorSinkOptions _options;
-    private readonly ILogger<AzureMonitorSink> _logger;
-    private readonly string? _connectionString;
+    private readonly AzureMonitorSinkOptions _options = options.Value;
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AzureMonitorSink"/> class.
-    /// </summary>
-    /// <param name="httpClient">The HTTP client.</param>
-    /// <param name="options">The Azure Monitor sink options.</param>
-    /// <param name="connectionString">The Azure Monitor connection string from Vault.</param>
-    /// <param name="logger">The logger.</param>
-    public AzureMonitorSink(
-        HttpClient httpClient,
-        IOptions<AzureMonitorSinkOptions> options,
-        string? connectionString,
-        ILogger<AzureMonitorSink> logger)
-    {
-        _httpClient = httpClient;
-        _options = options.Value;
-        _connectionString = connectionString;
-        _logger = logger;
-    }
 
     /// <inheritdoc />
     async Task ITraceSink.ExportAsync(
@@ -115,8 +102,9 @@ public sealed partial class AzureMonitorSink : ITraceSink, ILogSink, IMetricsSin
         CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        if (string.IsNullOrEmpty(_connectionString))
+        if (string.IsNullOrEmpty(connectionString))
         {
             LogConnectionStringNotConfigured(signalType);
             return;
@@ -127,7 +115,7 @@ public sealed partial class AzureMonitorSink : ITraceSink, ILogSink, IMetricsSin
             // Azure Monitor SDK handles the actual export through the configured TracerProvider/MeterProvider
             // For the Collector forwarding scenario, we log that we received the data
             // The actual export happens through the OpenTelemetry SDK exporter pipeline
-            LogDataReceived(signalType, data.Length);
+            LogDataReceived(signalType, contentType, data.Length);
         }
         catch (Exception ex)
         {
@@ -140,8 +128,8 @@ public sealed partial class AzureMonitorSink : ITraceSink, ILogSink, IMetricsSin
     [LoggerMessage(
         EventId = 1,
         Level = LogLevel.Debug,
-        Message = "Received {SignalType} data ({ByteCount} bytes) for Azure Monitor export")]
-    private partial void LogDataReceived(string signalType, int byteCount);
+        Message = "Received {SignalType} data ({ContentType}, {ByteCount} bytes) for Azure Monitor export")]
+    private partial void LogDataReceived(string signalType, string contentType, int byteCount);
 
     [LoggerMessage(
         EventId = 2,

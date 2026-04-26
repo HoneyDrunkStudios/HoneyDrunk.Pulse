@@ -47,8 +47,8 @@ public sealed partial class IngestionPipeline(
     /// <summary>
     /// OTLP severity number threshold mapping for Microsoft.Extensions.Logging.LogLevel.
     /// </summary>
-    private static readonly IReadOnlyDictionary<Microsoft.Extensions.Logging.LogLevel, int> LogLevelToOtlpSeverity =
-        new Dictionary<Microsoft.Extensions.Logging.LogLevel, int>
+    private static readonly Dictionary<Microsoft.Extensions.Logging.LogLevel, int> LogLevelToOtlpSeverity =
+        new()
         {
             { Microsoft.Extensions.Logging.LogLevel.Trace, 1 },
             { Microsoft.Extensions.Logging.LogLevel.Debug, 5 },
@@ -61,9 +61,9 @@ public sealed partial class IngestionPipeline(
 
     private readonly PulseCollectorOptions _options = options.Value;
     private readonly LokiSinkOptions? _lokiOptions = lokiOptions?.Value;
-    private readonly IReadOnlyList<ITraceSink> _traceSinks = traceSinks.ToList();
-    private readonly IReadOnlyList<ILogSink> _logSinks = logSinks.ToList();
-    private readonly IReadOnlyList<IMetricsSink> _metricsSinks = metricsSinks.ToList();
+    private readonly List<ITraceSink> _traceSinks = [.. traceSinks];
+    private readonly List<ILogSink> _logSinks = [.. logSinks];
+    private readonly List<IMetricsSink> _metricsSinks = [.. metricsSinks];
 
     /// <summary>
     /// Processes ingested traces.
@@ -481,7 +481,11 @@ public sealed partial class IngestionPipeline(
                 // Apply minimum log level filtering for Loki
                 if (ShouldFilterLogSink(sink, maxSeverityNumber))
                 {
-                    LogLogsBatchFilteredByLevel(maxSeverityNumber, _lokiOptions!.MinimumLogLevel.ToString());
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        LogLogsBatchFilteredByLevel(maxSeverityNumber, _lokiOptions!.MinimumLogLevel.ToString());
+                    }
+
                     continue;
                 }
 

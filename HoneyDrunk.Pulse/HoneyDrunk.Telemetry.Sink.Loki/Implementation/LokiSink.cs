@@ -16,32 +16,21 @@ namespace HoneyDrunk.Telemetry.Sink.Loki.Implementation;
 /// <summary>
 /// HTTP-based Loki log sink implementation that forwards OTLP log data to Loki.
 /// </summary>
-public sealed partial class LokiSink : ILogSink, IDisposable
+/// <remarks>
+/// Initializes a new instance of the <see cref="LokiSink"/> class.
+/// </remarks>
+/// <param name="httpClient">The HTTP client.</param>
+/// <param name="secretStore">The Vault secret store.</param>
+/// <param name="options">The Loki sink options.</param>
+/// <param name="logger">The logger.</param>
+public sealed partial class LokiSink(
+    HttpClient httpClient,
+    ISecretStore secretStore,
+    IOptions<LokiSinkOptions> options,
+    ILogger<LokiSink> logger) : ILogSink, IDisposable
 {
-    private readonly HttpClient _httpClient;
-    private readonly ISecretStore _secretStore;
-    private readonly LokiSinkOptions _options;
-    private readonly ILogger<LokiSink> _logger;
+    private readonly LokiSinkOptions _options = options.Value;
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LokiSink"/> class.
-    /// </summary>
-    /// <param name="httpClient">The HTTP client.</param>
-    /// <param name="secretStore">The Vault secret store.</param>
-    /// <param name="options">The Loki sink options.</param>
-    /// <param name="logger">The logger.</param>
-    public LokiSink(
-        HttpClient httpClient,
-        ISecretStore secretStore,
-        IOptions<LokiSinkOptions> options,
-        ILogger<LokiSink> logger)
-    {
-        _httpClient = httpClient;
-        _secretStore = secretStore;
-        _options = options.Value;
-        _logger = logger;
-    }
 
     /// <inheritdoc />
     public async Task ExportAsync(
@@ -76,7 +65,7 @@ public sealed partial class LokiSink : ILogSink, IDisposable
 
                 await ApplyRequestHeadersAsync(request, cancellationToken).ConfigureAwait(false);
 
-                using var response = await _httpClient.SendAsync(request, cancellationToken)
+                using var response = await httpClient.SendAsync(request, cancellationToken)
                     .ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
@@ -178,14 +167,18 @@ public sealed partial class LokiSink : ILogSink, IDisposable
             return null;
         }
 
-        var result = await _secretStore
+        var result = await secretStore
             .TryGetSecretAsync(new SecretIdentifier(secretName), cancellationToken)
             .ConfigureAwait(false);
 
         return result.IsSuccess ? result.Value?.Value : null;
     }
 
-    private AuthenticationHeaderValue BuildBasicAuthHeader(string value)
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "StyleCop.CSharp.OrderingRules",
+        "SA1204:Static elements should appear before instance elements",
+        Justification = "Helper kept adjacent to its only caller TryGetSecretValueAsync for readability.")]
+    private static AuthenticationHeaderValue BuildBasicAuthHeader(string value)
     {
         if (AuthenticationHeaderValue.TryParse(value, out var parsed)
             && !string.IsNullOrWhiteSpace(parsed.Scheme))

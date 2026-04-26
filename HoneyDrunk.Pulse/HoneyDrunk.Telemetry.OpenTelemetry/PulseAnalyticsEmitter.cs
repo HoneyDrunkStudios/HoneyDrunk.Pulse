@@ -17,27 +17,19 @@ namespace HoneyDrunk.Telemetry.OpenTelemetry;
 /// This implementation provides resilient analytics emission with automatic retry
 /// and graceful degradation when the collector is unavailable.
 /// </remarks>
-public sealed partial class PulseAnalyticsEmitter : IAnalyticsEmitter
+/// <remarks>
+/// Initializes a new instance of the <see cref="PulseAnalyticsEmitter"/> class.
+/// </remarks>
+/// <param name="httpClientFactory">The HTTP client factory.</param>
+/// <param name="options">The emitter options.</param>
+/// <param name="logger">The logger.</param>
+public sealed partial class PulseAnalyticsEmitter(
+    IHttpClientFactory httpClientFactory,
+    IOptions<PulseAnalyticsEmitterOptions> options,
+    ILogger<PulseAnalyticsEmitter> logger) : IAnalyticsEmitter
 {
-    private readonly HttpClient _httpClient;
-    private readonly PulseAnalyticsEmitterOptions _options;
-    private readonly ILogger<PulseAnalyticsEmitter> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="PulseAnalyticsEmitter"/> class.
-    /// </summary>
-    /// <param name="httpClientFactory">The HTTP client factory.</param>
-    /// <param name="options">The emitter options.</param>
-    /// <param name="logger">The logger.</param>
-    public PulseAnalyticsEmitter(
-        IHttpClientFactory httpClientFactory,
-        IOptions<PulseAnalyticsEmitterOptions> options,
-        ILogger<PulseAnalyticsEmitter> logger)
-    {
-        _httpClient = httpClientFactory.CreateClient(PulseAnalyticsEmitterOptions.HttpClientName);
-        _options = options.Value;
-        _logger = logger;
-    }
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(PulseAnalyticsEmitterOptions.HttpClientName);
+    private readonly PulseAnalyticsEmitterOptions _options = options.Value;
 
     /// <inheritdoc/>
     public async Task EmitAsync(TelemetryEvent telemetryEvent, CancellationToken cancellationToken = default)
@@ -58,7 +50,7 @@ public sealed partial class PulseAnalyticsEmitter : IAnalyticsEmitter
         {
             var request = new AnalyticsRequest
             {
-                Events = eventsList.Select(e => new AnalyticsEventDto
+                Events = [.. eventsList.Select(e => new AnalyticsEventDto
                 {
                     EventName = e.EventName,
                     Timestamp = e.Timestamp,
@@ -69,7 +61,7 @@ public sealed partial class PulseAnalyticsEmitter : IAnalyticsEmitter
                     NodeId = e.NodeId,
                     Environment = e.Environment,
                     Properties = e.Properties,
-                }).ToList(),
+                })],
                 SourceService = _options.ServiceName,
             };
 

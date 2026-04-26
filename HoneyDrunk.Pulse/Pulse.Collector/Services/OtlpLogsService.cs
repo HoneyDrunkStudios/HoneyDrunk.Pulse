@@ -53,11 +53,14 @@ public sealed class OtlpLogsService(
                 maxSeverityNumber: result.MaxSeverityNumber,
                 cancellationToken: context.CancellationToken).ConfigureAwait(false);
 
-            logger.LogDebug(
-                "gRPC OTLP logs received: {LogCount} logs ({ErrorCount} errors) from {Source}",
-                result.LogRecordCount,
-                result.ErrorLogs.Count,
-                sourceName ?? "unknown");
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug(
+                    "gRPC OTLP logs received: {LogCount} logs ({ErrorCount} errors) from {Source}",
+                    result.LogRecordCount,
+                    result.ErrorLogs.Count,
+                    sourceName ?? "unknown");
+            }
 
             return new ExportLogsServiceResponse();
         }

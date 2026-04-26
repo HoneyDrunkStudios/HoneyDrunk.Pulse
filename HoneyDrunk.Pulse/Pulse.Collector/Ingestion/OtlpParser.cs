@@ -1190,7 +1190,11 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
     /// <summary>
     /// Extracts the maximum severity number from OTLP log data for log level filtering.
     /// </summary>
-    private int ExtractMaxSeverity(byte[] bytes, string? contentType)
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "StyleCop.CSharp.OrderingRules",
+        "SA1204:Static elements should appear before instance elements",
+        Justification = "Helper kept adjacent to OTLP log parsing helpers for readability.")]
+    private static int ExtractMaxSeverity(byte[] bytes, string? contentType)
     {
         var maxSeverity = 0;
 
@@ -1246,7 +1250,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
     /// <summary>
     /// Extracts the maximum severity number from protobuf OTLP log data.
     /// </summary>
-    private int ExtractMaxSeverityFromProtobuf(byte[] bytes)
+    private static int ExtractMaxSeverityFromProtobuf(byte[] bytes)
     {
         var maxSeverity = 0;
 

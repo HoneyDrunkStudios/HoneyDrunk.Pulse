@@ -153,9 +153,11 @@ public static class OtlpEndpointValidationExtensions
             var errorMessage = $"OTLP endpoint '{otlpEndpoint}' points to this collector, which would create an infinite loop. " +
                                $"Configure '{OtlpEndpointConfigKey}' to point to a different collector or remove it to disable OTLP export.";
 
-            logger.LogCritical(
-                "FAIL-FAST: {Message}",
-                errorMessage);
+            // Critical-level log always fires regardless of filter — pre-formatted message is cheap on the failure path.
+            if (logger.IsEnabled(LogLevel.Critical))
+            {
+                logger.LogCritical("FAIL-FAST: {Message}", errorMessage);
+            }
 
             throw new InvalidOperationException($"FAIL-FAST: {errorMessage}");
         }

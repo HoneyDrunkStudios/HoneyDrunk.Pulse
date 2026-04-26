@@ -55,10 +55,13 @@ public sealed class OtlpMetricsService(
                 contentType: "application/x-protobuf",
                 cancellationToken: context.CancellationToken).ConfigureAwait(false);
 
-            logger.LogDebug(
-                "gRPC OTLP metrics received: {MetricCount} metrics from {Source}",
-                result.MetricCount,
-                sourceName ?? "unknown");
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug(
+                    "gRPC OTLP metrics received: {MetricCount} metrics from {Source}",
+                    result.MetricCount,
+                    sourceName ?? "unknown");
+            }
 
             return new ExportMetricsServiceResponse();
         }

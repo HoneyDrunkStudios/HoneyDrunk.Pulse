@@ -16,32 +16,23 @@ namespace HoneyDrunk.Telemetry.Sink.Sentry.Implementation;
 /// <summary>
 /// Sentry error tracking sink implementation.
 /// </summary>
-public sealed partial class SentrySink : IErrorSink, IDisposable
+/// <remarks>
+/// Initializes a new instance of the <see cref="SentrySink"/> class.
+/// </remarks>
+/// <param name="secretStore">The Vault secret store.</param>
+/// <param name="options">The Sentry sink options.</param>
+/// <param name="logger">The logger.</param>
+public sealed partial class SentrySink(
+    ISecretStore secretStore,
+    IOptions<SentrySinkOptions> options,
+    ILogger<SentrySink> logger) : IErrorSink, IDisposable
 {
-    private readonly ISecretStore _secretStore;
-    private readonly SentrySinkOptions _options;
-    private readonly ILogger<SentrySink> _logger;
+    private readonly SentrySinkOptions _options = options.Value;
     private readonly SemaphoreSlim _initializationLock = new(1, 1);
     private IDisposable? _sentryDisposable;
     private string? _activeDsn;
     private string? _activeDsnVersion;
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SentrySink"/> class.
-    /// </summary>
-    /// <param name="secretStore">The Vault secret store.</param>
-    /// <param name="options">The Sentry sink options.</param>
-    /// <param name="logger">The logger.</param>
-    public SentrySink(
-        ISecretStore secretStore,
-        IOptions<SentrySinkOptions> options,
-        ILogger<SentrySink> logger)
-    {
-        _secretStore = secretStore;
-        _options = options.Value;
-        _logger = logger;
-    }
 
     /// <inheritdoc />
     public async Task CaptureAsync(ErrorEvent errorEvent, CancellationToken cancellationToken = default)
@@ -151,7 +142,7 @@ public sealed partial class SentrySink : IErrorSink, IDisposable
 
     private async Task EnsureInitializedAsync(CancellationToken cancellationToken)
     {
-        var secret = await _secretStore
+        var secret = await secretStore
             .GetSecretAsync(new SecretIdentifier(_options.DsnSecretName), cancellationToken)
             .ConfigureAwait(false);
 
@@ -193,7 +184,11 @@ public sealed partial class SentrySink : IErrorSink, IDisposable
         }
     }
 
-    private SentryLevel MapSeverityToSentryLevel(TelemetryEventSeverity severity)
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "StyleCop.CSharp.OrderingRules",
+        "SA1204:Static elements should appear before instance elements",
+        Justification = "Helper kept adjacent to ConfigureScope/CaptureAsync for readability.")]
+    private static SentryLevel MapSeverityToSentryLevel(TelemetryEventSeverity severity)
     {
         return severity switch
         {

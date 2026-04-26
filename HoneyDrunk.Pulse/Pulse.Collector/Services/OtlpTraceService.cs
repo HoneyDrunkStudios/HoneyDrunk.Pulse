@@ -52,11 +52,14 @@ public sealed class OtlpTraceService(
                 contentType: "application/x-protobuf",
                 cancellationToken: context.CancellationToken).ConfigureAwait(false);
 
-            logger.LogDebug(
-                "gRPC OTLP traces received: {SpanCount} spans ({ErrorCount} errors) from {Source}",
-                result.SpanCount,
-                result.ErrorSpans.Count,
-                sourceName ?? "unknown");
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug(
+                    "gRPC OTLP traces received: {SpanCount} spans ({ErrorCount} errors) from {Source}",
+                    result.SpanCount,
+                    result.ErrorSpans.Count,
+                    sourceName ?? "unknown");
+            }
 
             return new ExportTraceServiceResponse();
         }
