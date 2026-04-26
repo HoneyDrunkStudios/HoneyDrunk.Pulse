@@ -6,6 +6,17 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
+    <!--
+      NU5104: A stable release of a package should not have a prerelease dependency.
+      Suppressed because OpenTelemetry.Instrumentation.Process has only ever shipped as beta
+      (1.14.0-beta.2 at the time of writing) — Microsoft has not released a stable version of
+      that instrumentation package. The dependency is wired behind an opt-in flag
+      (TelemetryOptions.EnableProcessInstrumentation), so consumers who don't enable process
+      instrumentation never load it at runtime. Remove this suppression once OpenTelemetry ships
+      a stable Process instrumentation release.
+    -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
+
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Telemetry.OpenTelemetry</PackageId>
     <Version>0.1.0</Version>
