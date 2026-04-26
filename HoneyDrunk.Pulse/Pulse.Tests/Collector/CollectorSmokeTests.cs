@@ -15,6 +15,7 @@ namespace HoneyDrunk.Pulse.Tests.Collector;
 /// Initializes a new instance of the <see cref="CollectorSmokeTests"/> class.
 /// </remarks>
 /// <param name="factory">The web application factory.</param>
+[Collection(CollectorEnvVarCollection.CollectionName)]
 public class CollectorSmokeTests(CollectorWebApplicationFactory factory) : IClassFixture<CollectorWebApplicationFactory>
 {
     /// <summary>

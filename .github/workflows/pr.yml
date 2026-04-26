@@ -25,6 +25,10 @@ jobs:
       enable-secret-scan: true
       enable-accessibility-check: false
       post-pr-summary: true
+      # Block the PR on warning+ severity. Notes (style suggestions like .Where over foreach,
+      # generic catches at intentional defensive boundaries, etc.) are still recorded in the
+      # Security tab but don't gate merges — too noisy to be useful as a hard block.
+      codeql-fail-on-severity: 'warning'
       actions-ref: 'main'
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}

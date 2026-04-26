@@ -75,9 +75,8 @@ public class IngestionPipelineTests
 
         // Assert
         _messagePublisher.PublishedMessages.Should().HaveCount(1);
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message.Should().NotBeNull();
-        message!.TraceCount.Should().Be(5);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.TraceCount.Should().Be(5);
         message.SourceNodeName.Should().Be("test-service");
         message.SourceNodeId.Should().Be("node-1");
         message.Status.Should().Be(IngestionStatus.Success);
@@ -130,9 +129,8 @@ public class IngestionPipelineTests
 
         // Assert
         _messagePublisher.PublishedMessages.Should().HaveCount(1);
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message.Should().NotBeNull();
-        message!.MetricCount.Should().Be(10);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.MetricCount.Should().Be(10);
         message.TraceCount.Should().Be(0);
         message.LogCount.Should().Be(0);
     }
@@ -152,9 +150,8 @@ public class IngestionPipelineTests
 
         // Assert
         _messagePublisher.PublishedMessages.Should().HaveCount(1);
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message.Should().NotBeNull();
-        message!.LogCount.Should().Be(20);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.LogCount.Should().Be(20);
         message.MetricCount.Should().Be(0);
     }
 

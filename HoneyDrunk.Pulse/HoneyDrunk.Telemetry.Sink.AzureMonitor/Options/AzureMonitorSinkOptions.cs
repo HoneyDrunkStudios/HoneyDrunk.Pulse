@@ -15,9 +15,14 @@ public sealed class AzureMonitorSinkOptions
     public const string SectionName = "HoneyDrunk:AzureMonitor";
 
     /// <summary>
-    /// The Vault secret key for Azure Monitor connection string.
+    /// The Vault secret name for the Azure Monitor connection string.
     /// </summary>
-    public const string ConnectionStringSecretKey = "AzureMonitorConnectionString";
+    /// <remarks>
+    /// Uses the <c>{Provider}--{Key}</c> convention shared across the Grid (matches
+    /// <c>Resend--ApiKey</c>, <c>Twilio--AccountSid</c>, etc.). Consumers reading this secret via
+    /// <c>ISecretStore</c> must use this exact identifier.
+    /// </remarks>
+    public const string ConnectionStringSecretKey = "AzureMonitor--ConnectionString";
 
     /// <summary>
     /// Gets or sets a value indicating whether the sink is enabled.

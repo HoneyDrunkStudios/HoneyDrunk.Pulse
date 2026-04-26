@@ -2,8 +2,6 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
-#pragma warning disable CA2000 // Dispose objects before losing scope - ActivitySource is disposed via ApplicationStopping callback
-
 using HoneyDrunk.Pulse.Sample.Api;
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Conventions;
@@ -11,12 +9,14 @@ using HoneyDrunk.Telemetry.Abstractions.Models;
 using HoneyDrunk.Telemetry.OpenTelemetry.Extensions;
 using System.Diagnostics;
 
-// Static ActivitySource to be properly managed
-var activitySource = new ActivitySource(TelemetryNames.GetActivitySourceName("Sample.Api"));
-
-#pragma warning restore CA2000
-
 var builder = WebApplication.CreateBuilder(args);
+
+// Register ActivitySource as a DI singleton so the container owns its lifecycle and disposes it
+// at host shutdown. This avoids the local-not-disposed analyzer flagging an explicit
+// new ActivitySource(...) at top-level statements (CodeQL doesn't model the
+// ApplicationStopping.Register(activitySource.Dispose) pattern as proper disposal).
+builder.Services.AddSingleton(_ =>
+    new ActivitySource(TelemetryNames.GetActivitySourceName("Sample.Api")));
 
 // Add HoneyDrunk OpenTelemetry instrumentation
 builder.Services.AddHoneyDrunkOpenTelemetry(options =>
@@ -37,8 +37,9 @@ builder.Services.AddPulseAnalyticsEmitter(options =>
 
 var app = builder.Build();
 
-// Register the ActivitySource for disposal when the app shuts down
-app.Lifetime.ApplicationStopping.Register(activitySource.Dispose);
+// Resolve the DI-owned ActivitySource for use in minimal-API endpoint handlers below.
+// The container calls Dispose on it during host shutdown.
+var activitySource = app.Services.GetRequiredService<ActivitySource>();
 
 var summaries = new[]
 {

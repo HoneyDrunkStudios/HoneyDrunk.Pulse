@@ -39,7 +39,7 @@ public sealed partial class PulseIngestedPublisher(
     {
         var gridContext = gridContextAccessor.GridContext is { IsInitialized: true }
             ? gridContextAccessor.GridContext
-            : CreateDefaultGridContext();
+            : CreateDefaultGridContext(@event.CorrelationId);
 
         LogPublishingPulseIngested(
             @event.BatchId ?? "unknown",
@@ -55,7 +55,13 @@ public sealed partial class PulseIngestedPublisher(
             cancellationToken).ConfigureAwait(false);
     }
 
-    private GridContext CreateDefaultGridContext()
+    /// <summary>
+    /// Builds a fallback <see cref="GridContext"/> when the ambient one is missing or uninitialized.
+    /// Prefers the event's own <see cref="Contracts.Events.PulseIngested.CorrelationId"/> so that the
+    /// Transport message context stays correlated with the ingested event; only mints a new GUID
+    /// when the event itself has no correlation ID set.
+    /// </summary>
+    private GridContext CreateDefaultGridContext(string? eventCorrelationId)
     {
         var context = new GridContext(
             nodeId: nodeContext.NodeId,
@@ -63,7 +69,9 @@ public sealed partial class PulseIngestedPublisher(
             environment: nodeContext.Environment);
 
         context.Initialize(
-            correlationId: Guid.NewGuid().ToString("N"),
+            correlationId: !string.IsNullOrWhiteSpace(eventCorrelationId)
+                ? eventCorrelationId
+                : Guid.NewGuid().ToString("N"),
             causationId: null,
             tenantId: null,
             projectId: null);

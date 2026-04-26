@@ -21,6 +21,7 @@ namespace HoneyDrunk.Pulse.Tests.Transport;
 /// Initializes a new instance of the <see cref="TransportPublishingIntegrationTests"/> class.
 /// </remarks>
 /// <param name="factory">The custom web application factory with message capturing.</param>
+[Collection(HoneyDrunk.Pulse.Tests.Collector.CollectorEnvVarCollection.CollectionName)]
 public class TransportPublishingIntegrationTests(TransportPublishingIntegrationTests.CollectorWithCapturingPublisher factory) : IClassFixture<TransportPublishingIntegrationTests.CollectorWithCapturingPublisher>
 {
     /// <summary>

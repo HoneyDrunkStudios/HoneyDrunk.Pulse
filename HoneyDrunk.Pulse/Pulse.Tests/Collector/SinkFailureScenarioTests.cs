@@ -90,11 +90,10 @@ public class SinkFailureScenarioTests
         // Assert - Ingestion did not crash
         _messagePublisher.PublishedMessages.Should().HaveCount(1);
 
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message.Should().NotBeNull();
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
 
         // Assert - Status is PartialSuccess (not Success, not Failure)
-        message!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        message.Status.Should().Be(IngestionStatus.PartialSuccess);
 
         // Assert - Successful sink was called
         successfulAzureMonitorSink.ExportCallCount.Should().Be(1);
@@ -186,11 +185,10 @@ public class SinkFailureScenarioTests
         // Assert - Ingestion did not crash
         _messagePublisher.PublishedMessages.Should().HaveCount(1);
 
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message.Should().NotBeNull();
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
 
         // Assert - Status is PartialSuccess
-        message!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        message.Status.Should().Be(IngestionStatus.PartialSuccess);
 
         // Assert - Successful sink was called
         successfulAzureMonitorSink.ExportCallCount.Should().Be(1);

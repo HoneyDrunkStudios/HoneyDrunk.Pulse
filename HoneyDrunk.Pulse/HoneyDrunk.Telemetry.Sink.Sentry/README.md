@@ -32,7 +32,7 @@ The DSN value is resolved from `ISecretStore` and the SDK is reinitialized when 
 - Exception details forwarding (type, message, stacktrace)
 - Tag and extra data propagation
 - Grid context enrichment (CorrelationId, NodeId, Environment)
-- Depends on Sentry SDK 6.1.0
+- Depends on Sentry SDK 6.4.1
 
 ## Related Projects
 

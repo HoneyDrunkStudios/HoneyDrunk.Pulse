@@ -2,6 +2,7 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
+using HoneyDrunk.Telemetry.Sink.AzureMonitor.Options;
 using HoneyDrunk.Vault.Abstractions;
 using HoneyDrunk.Vault.Models;
 
@@ -14,7 +15,10 @@ public static class SecretValidationExtensions
 {
     private const string PostHogApiKeySecretName = "PostHog--ApiKey";
     private const string SentryDsnSecretName = "Sentry--Dsn";
-    private const string AzureMonitorConnectionStringSecretName = "AzureMonitor--ConnectionString";
+
+    // Source of truth for the AzureMonitor secret name lives on the sink options package so that
+    // a single rename propagates everywhere.
+    private const string AzureMonitorConnectionStringSecretName = AzureMonitorSinkOptions.ConnectionStringSecretKey;
 
     /// <summary>
     /// Validates that all required secrets are available via Vault.
@@ -80,8 +84,10 @@ public static class SecretValidationExtensions
 
             logger.LogMissingSecretWarning(message);
         }
-        else
+        else if (checks.Count > 0)
         {
+            // Only emit the success log when at least one Vault read actually happened.
+            // If no sinks that require secrets are enabled, there's nothing to validate.
             logger.LogSecretsValidated();
         }
 

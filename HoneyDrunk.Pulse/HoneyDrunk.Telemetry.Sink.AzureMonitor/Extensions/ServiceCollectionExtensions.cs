@@ -75,12 +75,12 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         string? connectionString)
     {
-        services.AddHttpClient<AzureMonitorSink>();
-
+        // AzureMonitorSink no longer takes an HttpClient — actual export is owned by the OpenTelemetry
+        // SDK exporter pipeline registered separately. Both the typed-client registration and the
+        // local httpClient resolution were dead after that refactor.
         services.AddSingleton(sp =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AzureMonitorSinkOptions>>();
-            var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(AzureMonitorSink));
             var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<AzureMonitorSink>>();
 
             return new AzureMonitorSink(options, connectionString, logger);

@@ -32,12 +32,16 @@ public class PulseIngestedPublishTests
     [Fact]
     public void PulseIngested_ShouldInitializeWithDefaults()
     {
-        // Act
+        // Act — bracket the construction so we can assert the timestamp falls within the window
+        // rather than relying on a tight tolerance against UtcNow (flaky on slow CI / GC pauses).
+        var before = DateTimeOffset.UtcNow;
         var ingested = new PulseIngested();
+        var after = DateTimeOffset.UtcNow;
 
         // Assert
         ingested.Status.Should().Be(IngestionStatus.Success);
-        ingested.IngestionTimestamp.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1));
+        ingested.IngestionTimestamp.Should().BeOnOrAfter(before);
+        ingested.IngestionTimestamp.Should().BeOnOrBefore(after);
         ingested.TraceCount.Should().Be(0);
         ingested.MetricCount.Should().Be(0);
         ingested.LogCount.Should().Be(0);
