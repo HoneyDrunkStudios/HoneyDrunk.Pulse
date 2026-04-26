@@ -406,8 +406,8 @@ public class IngestionPipelineTests
         await pipeline.ProcessTracesAsync(1, "test-service", "node-1");
 
         // Assert
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message!.BatchId.Should().NotBeNullOrEmpty();
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.BatchId.Should().NotBeNullOrEmpty();
         message.BatchId!.Length.Should().Be(32); // GUID without dashes
     }
 

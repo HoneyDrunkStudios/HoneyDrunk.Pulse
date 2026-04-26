@@ -23,6 +23,10 @@ namespace HoneyDrunk.Pulse.Tests.Collector;
 /// </para>
 /// </remarks>
 [CollectionDefinition(CollectionName, DisableParallelization = true)]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Microsoft.Naming",
+    "CA1711:IdentifiersShouldNotHaveIncorrectSuffix",
+    Justification = "xUnit's [CollectionDefinition] pattern conventionally names the marker class with the 'Collection' suffix; the type does not implement ICollection and exists solely to anchor the collection name.")]
 public sealed class CollectorEnvVarCollection
 {
     /// <summary>

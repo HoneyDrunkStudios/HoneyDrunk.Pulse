@@ -276,8 +276,8 @@ public class SinkFailureScenarioTests
             contentType: "application/x-protobuf");
 
         // Assert
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.Status.Should().Be(IngestionStatus.PartialSuccess);
 
         // Tempo received data
         successfulTempoSink.ExportCallCount.Should().Be(1);
@@ -313,8 +313,8 @@ public class SinkFailureScenarioTests
             contentType: "application/x-protobuf");
 
         // Assert
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.Status.Should().Be(IngestionStatus.PartialSuccess);
 
         successfulMimirSink.ExportCallCount.Should().Be(1);
         failingAzureMonitorSink.ExportCallCount.Should().Be(1);
@@ -348,8 +348,8 @@ public class SinkFailureScenarioTests
             maxSeverityNumber: 13); // Warning level
 
         // Assert
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.Status.Should().Be(IngestionStatus.PartialSuccess);
 
         successfulLokiSink.ExportCallCount.Should().Be(1);
         failingAzureMonitorSink.ExportCallCount.Should().Be(1);
@@ -384,8 +384,8 @@ public class SinkFailureScenarioTests
         // Assert - Still publishes event (ingestion succeeded, routing failed)
         _messagePublisher.PublishedMessages.Should().HaveCount(1);
 
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.Status.Should().Be(IngestionStatus.PartialSuccess);
 
         // Both sinks were attempted
         failingTempoSink.ExportCallCount.Should().Be(1);
@@ -430,18 +430,18 @@ public class SinkFailureScenarioTests
         _messagePublisher.PublishedMessages.Should().HaveCount(3);
 
         // Trace message: 2 failures
-        var traceMessage = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        traceMessage!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        var traceMessage = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        traceMessage.Status.Should().Be(IngestionStatus.PartialSuccess);
         traceMessage.Metadata["pulse.sink_failures"].Should().Be("2");
 
         // Log message: 1 failure
-        var logMessage = _messagePublisher.PublishedMessages[1] as PulseIngested;
-        logMessage!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        var logMessage = _messagePublisher.PublishedMessages[1].Should().BeOfType<PulseIngested>().Subject;
+        logMessage.Status.Should().Be(IngestionStatus.PartialSuccess);
         logMessage.Metadata["pulse.sink_failures"].Should().Be("1");
 
         // Metrics message: 0 failures (Success)
-        var metricsMessage = _messagePublisher.PublishedMessages[2] as PulseIngested;
-        metricsMessage!.Status.Should().Be(IngestionStatus.Success);
+        var metricsMessage = _messagePublisher.PublishedMessages[2].Should().BeOfType<PulseIngested>().Subject;
+        metricsMessage.Status.Should().Be(IngestionStatus.Success);
         metricsMessage.Metadata.Should().NotContainKey("pulse.sink_failures");
     }
 
@@ -462,8 +462,8 @@ public class SinkFailureScenarioTests
         await pipeline.ProcessTracesAsync(5, "no-sink-service", "node-1");
 
         // Assert
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message!.Status.Should().Be(IngestionStatus.Success);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.Status.Should().Be(IngestionStatus.Success);
         message.Metadata.Should().NotContainKey("pulse.sink_failures");
     }
 
@@ -493,8 +493,8 @@ public class SinkFailureScenarioTests
             contentType: "application/x-protobuf");
 
         // Assert
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message!.Status.Should().Be(IngestionStatus.Success);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.Status.Should().Be(IngestionStatus.Success);
 
         // Both sinks were called
         successfulTempoSink.ExportCallCount.Should().Be(1);
@@ -529,8 +529,8 @@ public class SinkFailureScenarioTests
         await pipeline.ProcessAnalyticsEventsAsync(events, "auth-service", "node-auth");
 
         // Assert
-        var message = _messagePublisher.PublishedMessages[0] as PulseIngested;
-        message!.Status.Should().Be(IngestionStatus.PartialSuccess);
+        var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
+        message.Status.Should().Be(IngestionStatus.PartialSuccess);
         failingAnalyticsSink.CaptureCallCount.Should().Be(1);
     }
 
