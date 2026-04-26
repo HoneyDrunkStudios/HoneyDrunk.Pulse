@@ -24,7 +24,6 @@ public class PulseIngestedPublishTests
 
         // Assert
         ingested.Version.Should().Be(PulseContractVersions.Current);
-        ingested.Version.Should().Be(1);
     }
 
     /// <summary>

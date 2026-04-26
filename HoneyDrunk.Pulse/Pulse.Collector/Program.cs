@@ -36,7 +36,8 @@ public class Program
     /// Main entry point.
     /// </summary>
     /// <param name="args">Command line arguments.</param>
-    public static void Main(string[] args)
+    /// <returns>A task representing the asynchronous host lifetime.</returns>
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -147,8 +148,9 @@ public class Program
         // Validate OTLP endpoint is not self-referencing (fail-fast to prevent infinite loop)
         app.ValidateOtlpEndpointNotSelfReferencing(otlpEndpoint);
 
-        // Validate required secrets (fail-fast in production if missing)
-        app.ValidateRequiredSecrets(collectorOptions);
+        // Validate required secrets (fail-fast in production if missing).
+        // Reads are parallelized inside the extension; await it once at startup before serving traffic.
+        await app.ValidateRequiredSecretsAsync(collectorOptions).ConfigureAwait(false);
 
         // Validate sink endpoints (fail-fast in production if missing)
         app.ValidateSinkEndpoints(collectorOptions);
@@ -163,6 +165,6 @@ public class Program
         app.MapGrpcService<OtlpMetricsService>();
         app.MapGrpcService<OtlpLogsService>();
 
-        app.Run();
+        await app.RunAsync().ConfigureAwait(false);
     }
 }

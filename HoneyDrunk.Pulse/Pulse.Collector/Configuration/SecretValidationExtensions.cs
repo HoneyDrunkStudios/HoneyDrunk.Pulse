@@ -24,7 +24,11 @@ public static class SecretValidationExtensions
     /// <param name="app">The web application.</param>
     /// <param name="options">The collector options.</param>
     /// <returns>The web application for chaining.</returns>
-    public static WebApplication ValidateRequiredSecrets(
+    /// <remarks>
+    /// All required secret reads are dispatched in parallel via <see cref="Task.WhenAll(System.Collections.Generic.IEnumerable{Task})"/>
+    /// so that startup latency is bounded by the slowest read rather than the sum of all reads.
+    /// </remarks>
+    public static async Task<WebApplication> ValidateRequiredSecretsAsync(
         this WebApplication app,
         PulseCollectorOptions options)
     {
@@ -32,57 +36,37 @@ public static class SecretValidationExtensions
         var logger = app.Services.GetRequiredService<ILogger<Program>>();
         var isDevelopment = app.Environment.IsDevelopment();
 
-        var missingSecrets = new List<string>();
+        // Collect all checks to run; each returns the secret name only on miss, otherwise null.
+        var checks = new List<Task<string?>>();
 
-        // Check PostHog API key via Vault if sink is enabled
         if (options.EnablePostHogSink)
         {
-            var secretId = new SecretIdentifier(PostHogApiKeySecretName);
-            var result = secretStore.TryGetSecretAsync(secretId).GetAwaiter().GetResult();
-            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Value?.Value))
-            {
-                missingSecrets.Add(PostHogApiKeySecretName);
-            }
+            checks.Add(CheckSecretAsync(secretStore, PostHogApiKeySecretName));
         }
 
-        // Check Sentry DSN via Vault if sink is enabled
         if (options.EnableSentrySink)
         {
-            var secretId = new SecretIdentifier(SentryDsnSecretName);
-            var result = secretStore.TryGetSecretAsync(secretId).GetAwaiter().GetResult();
-            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Value?.Value))
-            {
-                missingSecrets.Add(SentryDsnSecretName);
-            }
+            checks.Add(CheckSecretAsync(secretStore, SentryDsnSecretName));
         }
 
-        // Check Azure Monitor connection string via Vault if sink is enabled
         if (options.EnableAzureMonitorSink)
         {
-            var secretId = new SecretIdentifier(AzureMonitorConnectionStringSecretName);
-            var result = secretStore.TryGetSecretAsync(secretId).GetAwaiter().GetResult();
-            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Value?.Value))
-            {
-                missingSecrets.Add(AzureMonitorConnectionStringSecretName);
-            }
+            checks.Add(CheckSecretAsync(secretStore, AzureMonitorConnectionStringSecretName));
         }
 
-        // Note: Tempo, Loki, and Mimir sinks validate their endpoint configuration via options validation
-        // They don't require secrets - endpoints are typically internal infrastructure addresses
+        // Note: Tempo, Loki, and Mimir sinks validate their endpoint configuration via options validation.
+        // They don't require secrets — endpoints are typically internal infrastructure addresses.
 
-        // Check Azure Service Bus connection string if using Azure Service Bus adapter
-        // Note: This is a secondary validation; the primary validation happens in ConfigureTransportAdapter
-        // which fails fast during service registration if the secret is missing
+        // Check Azure Service Bus connection string if using the Service Bus transport adapter.
+        // This is a secondary validation; the primary one happens in ConfigureTransportAdapter, which
+        // fails fast during service registration if the secret is missing.
         if (string.Equals(options.TransportAdapter, TransportValidationExtensions.AzureServiceBusAdapter, StringComparison.OrdinalIgnoreCase))
         {
-            var secretId = new SecretIdentifier(TransportValidationExtensions.ServiceBusConnectionStringSecretName);
-            var result = secretStore.TryGetSecretAsync(secretId).GetAwaiter().GetResult();
-            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Value?.Value))
-            {
-                // This should have already failed in ConfigureTransportAdapter, but log for completeness
-                missingSecrets.Add(TransportValidationExtensions.ServiceBusConnectionStringSecretName);
-            }
+            checks.Add(CheckSecretAsync(secretStore, TransportValidationExtensions.ServiceBusConnectionStringSecretName));
         }
+
+        var results = await Task.WhenAll(checks).ConfigureAwait(false);
+        var missingSecrets = results.Where(name => name is not null).Cast<string>().ToList();
 
         if (missingSecrets.Count > 0)
         {
@@ -93,10 +77,8 @@ public static class SecretValidationExtensions
                 logger.LogFailFast(message);
                 throw new InvalidOperationException($"FAIL-FAST: {message}. Configure secrets via Vault.");
             }
-            else
-            {
-                logger.LogMissingSecretWarning(message);
-            }
+
+            logger.LogMissingSecretWarning(message);
         }
         else
         {
@@ -104,5 +86,19 @@ public static class SecretValidationExtensions
         }
 
         return app;
+    }
+
+    /// <summary>
+    /// Reads a secret and returns its name if missing or empty, otherwise null.
+    /// </summary>
+    private static async Task<string?> CheckSecretAsync(ISecretStore secretStore, string secretName)
+    {
+        var result = await secretStore
+            .TryGetSecretAsync(new SecretIdentifier(secretName))
+            .ConfigureAwait(false);
+
+        return !result.IsSuccess || string.IsNullOrWhiteSpace(result.Value?.Value)
+            ? secretName
+            : null;
     }
 }

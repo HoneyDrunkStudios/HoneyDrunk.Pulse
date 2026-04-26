@@ -10,17 +10,28 @@ using Microsoft.Extensions.Options;
 namespace HoneyDrunk.Telemetry.Sink.AzureMonitor.Implementation;
 
 /// <summary>
-/// Azure Monitor sink implementation that forwards telemetry data to Application Insights.
+/// Receipt-only Azure Monitor sink. Implements <see cref="ITraceSink"/>, <see cref="ILogSink"/>,
+/// and <see cref="IMetricsSink"/> as a pass-through observer that records that telemetry data was
+/// received and that the Azure Monitor connection string is configured.
 /// </summary>
 /// <remarks>
-/// This sink implements ITraceSink, ILogSink, and IMetricsSink to allow selective routing
-/// of different signal types to Azure Monitor.
-/// </remarks>
-/// <remarks>
-/// Initializes a new instance of the <see cref="AzureMonitorSink"/> class.
+/// <para>
+/// <b>This sink does not perform export by itself.</b> Actual delivery to Application Insights /
+/// Azure Monitor happens via the OpenTelemetry SDK exporter pipeline (e.g. the Azure Monitor
+/// OpenTelemetry exporter package), registered separately in the host. The sink exists to:
+/// </para>
+/// <list type="bullet">
+///   <item>Validate that an Azure Monitor connection string is present in Vault when the AzureMonitor sink is enabled (Invariant 9).</item>
+///   <item>Emit a debug log per signal type so receipt is observable for end-to-end smoke tests.</item>
+///   <item>Provide a uniform <see cref="ITraceSink"/>/<see cref="ILogSink"/>/<see cref="IMetricsSink"/> registration shape consistent with the other sinks (Loki, Mimir, Tempo, Sentry, PostHog).</item>
+/// </list>
+/// <para>
+/// If full HTTP-forwarding behavior (matching Loki/Mimir/Tempo) is ever required for Azure Monitor,
+/// this class becomes the place to add it. Until then, treat it as a configuration-only adapter.
+/// </para>
 /// </remarks>
 /// <param name="options">The Azure Monitor sink options.</param>
-/// <param name="connectionString">The Azure Monitor connection string from Vault.</param>
+/// <param name="connectionString">The Azure Monitor connection string from Vault. May be null when the sink is disabled or in development.</param>
 /// <param name="logger">The logger.</param>
 public sealed partial class AzureMonitorSink(
     IOptions<AzureMonitorSinkOptions> options,

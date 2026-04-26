@@ -68,7 +68,6 @@ public static class TelemetryEventExtensions
         }
 
         telemetryEvent.NodeId ??= context.NodeId;
-        telemetryEvent.NodeName ??= context.NodeId;
         telemetryEvent.Environment ??= context.Environment;
 
         return telemetryEvent;

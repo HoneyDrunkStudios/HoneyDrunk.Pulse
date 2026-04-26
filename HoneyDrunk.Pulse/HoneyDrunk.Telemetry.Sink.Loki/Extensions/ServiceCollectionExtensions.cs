@@ -56,8 +56,7 @@ public static class ServiceCollectionExtensions
 
             if (!string.IsNullOrEmpty(options.Endpoint))
             {
-                var uri = new Uri(options.Endpoint);
-                client.BaseAddress = new Uri($"{uri.Scheme}://{uri.Host}:{uri.Port}");
+                client.BaseAddress = new Uri(options.Endpoint, UriKind.Absolute);
             }
 
             client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);

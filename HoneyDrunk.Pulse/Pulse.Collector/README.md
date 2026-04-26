@@ -21,16 +21,19 @@ Pulse.Collector receives OTLP telemetry data and routes it to:
 | `/otlp/v1/analytics` | POST | `application/json` | Custom analytics events |
 | `/otlp/v1/errors` | POST | `application/json` | Error reports |
 
-### gRPC Endpoints (Not Yet Implemented)
+### gRPC Endpoints (Implemented)
 
-The OTLP specification supports gRPC transport, but this is **not yet implemented**. The current implementation only supports HTTP/JSON and HTTP/protobuf.
+OTLP gRPC is implemented via the standard OTLP service contracts:
 
-To implement gRPC OTLP support, the following would be required:
-1. Generate C# types from [OTLP proto definitions](https://github.com/open-telemetry/opentelemetry-proto)
-2. Implement `TraceService.Export`, `MetricsService.Export`, and `LogsService.Export` gRPC services
-3. Register gRPC services in the ASP.NET Core pipeline
+| Service | Method | Description |
+|---------|--------|-------------|
+| `opentelemetry.proto.collector.trace.v1.TraceService` | `Export` | OTLP traces over gRPC |
+| `opentelemetry.proto.collector.metrics.v1.MetricsService` | `Export` | OTLP metrics over gRPC |
+| `opentelemetry.proto.collector.logs.v1.LogsService` | `Export` | OTLP logs over gRPC |
 
-For most use cases, HTTP OTLP is sufficient and simpler to deploy.
+The host registers gRPC services on the same Kestrel listener as the HTTP endpoints (HTTP/2-enabled). Clients should target the standard OTLP gRPC port (commonly `4317`) when configured, or the host's listening port for local runs.
+
+For deployment guidance and examples of pointing OTel SDK exporters at the collector, see [HoneyDrunk.Telemetry.OpenTelemetry README](../HoneyDrunk.Telemetry.OpenTelemetry/README.md).
 
 ## Health Endpoints
 
@@ -38,6 +41,7 @@ For most use cases, HTTP OTLP is sufficient and simpler to deploy.
 |----------|-------------|
 | `/health` | Liveness check |
 | `/health/ready` | Readiness check (detailed) |
+| `/health/live` | Liveness probe (Kubernetes / Container Apps) |
 
 ## Configuration
 

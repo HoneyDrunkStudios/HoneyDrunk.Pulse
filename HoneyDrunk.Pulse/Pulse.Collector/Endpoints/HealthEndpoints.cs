@@ -20,11 +20,11 @@ public static class HealthEndpoints
             .WithName("Health")
             .WithTags("Health");
 
-        endpoints.MapGet("/ready", () => Results.Ok(new { Status = "Ready" }))
+        endpoints.MapGet("/health/ready", () => Results.Ok(new { Status = "Ready" }))
             .WithName("Ready")
             .WithTags("Health");
 
-        endpoints.MapGet("/live", () => Results.Ok(new { Status = "Live" }))
+        endpoints.MapGet("/health/live", () => Results.Ok(new { Status = "Live" }))
             .WithName("Liveness")
             .WithTags("Health");
 

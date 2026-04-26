@@ -45,7 +45,7 @@ public class CollectorSmokeTests(CollectorWebApplicationFactory factory) : IClas
         var client = factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync(new Uri("/ready", UriKind.Relative));
+        var response = await client.GetAsync(new Uri("/health/ready", UriKind.Relative));
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -62,7 +62,7 @@ public class CollectorSmokeTests(CollectorWebApplicationFactory factory) : IClas
         var client = factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync(new Uri("/live", UriKind.Relative));
+        var response = await client.GetAsync(new Uri("/health/live", UriKind.Relative));
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
