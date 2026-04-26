@@ -1,0 +1,160 @@
+name: Deploy Pulse Collector
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'HoneyDrunk.Pulse/Pulse.Collector/**'
+      - 'HoneyDrunk.Pulse/HoneyDrunk.Pulse.slnx'
+      - '.github/workflows/deploy.yml'
+  workflow_run:
+    workflows: ["Publish to NuGet"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+        default: 'development'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-image:
+    name: Build & Push Container Image
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      container-image: ${{ steps.meta.outputs.full-image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout HoneyDrunk.Actions
+        uses: actions/checkout@v4
+        with:
+          repository: HoneyDrunkStudios/HoneyDrunk.Actions
+          ref: main
+          path: .actions
+
+      - name: Compute image tag
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::7}"
+
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            # After a tag-triggered publish — extract version from the head branch
+            IMAGE_TAG="${{ github.event.workflow_run.head_branch }}"
+            IMAGE_TAG="${IMAGE_TAG#v}"
+          else
+            IMAGE_TAG="dev-${SHORT_SHA}"
+          fi
+
+          REGISTRY="${{ vars.ACR_REGISTRY }}"
+          FULL_IMAGE="${REGISTRY}/honeydrunkstudios/pulse-collector:${IMAGE_TAG}"
+          echo "image-tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "full-image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
+
+      - name: Login to ACR
+        uses: ./.actions/.github/actions/azure/acr-login
+        with:
+          registry: ${{ vars.ACR_REGISTRY }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build \
+            -f HoneyDrunk.Pulse/Pulse.Collector/Dockerfile \
+            -t "${{ steps.meta.outputs.full-image }}" \
+            HoneyDrunk.Pulse
+          docker push "${{ steps.meta.outputs.full-image }}"
+
+  resolve:
+    name: Resolve ${{ inputs.environment || (github.event_name == 'push' && 'development') || 'production' }} config
+    needs: build-image
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || (github.event_name == 'push' && 'development') || 'production' }}
+    outputs:
+      app-name: ${{ vars.COLLECTOR_APP_NAME }}
+      resource-group: ${{ vars.COLLECTOR_RESOURCE_GROUP }}
+      keyvault-name: ${{ vars.KEYVAULT_NAME }}
+      keyvault-uri: ${{ vars.AZURE_KEYVAULT_URI }}
+      appconfig-endpoint: ${{ vars.AZURE_APPCONFIG_ENDPOINT }}
+      keyvault-secrets: ''
+      use-slot-swap: ${{ inputs.environment == 'production' || github.event_name == 'workflow_run' }}
+    steps:
+      - name: Export environment config
+        run: |
+          echo "Resolved config for environment: ${{ inputs.environment || (github.event_name == 'push' && 'development') || 'production' }}"
+          echo "  App Name: ${{ vars.COLLECTOR_APP_NAME }}"
+          echo "  Resource Group: ${{ vars.COLLECTOR_RESOURCE_GROUP }}"
+          echo "  Key Vault: ${{ vars.KEYVAULT_NAME }}"
+
+  configure:
+    name: Configure bootstrap settings
+    needs: resolve
+    if: ${{ needs.resolve.outputs.app-name != '' && needs.resolve.outputs.resource-group != '' && needs.resolve.outputs.keyvault-uri != '' && needs.resolve.outputs.appconfig-endpoint != '' && vars.AZURE_CLIENT_ID != '' && vars.AZURE_TENANT_ID != '' && vars.AZURE_SUBSCRIPTION_ID != '' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || (github.event_name == 'push' && 'development') || 'production' }}
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Apply env-driven bootstrap settings
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SLOT="${{ needs.resolve.outputs.use-slot-swap == 'true' && 'staging' || 'production' }}"
+          SLOT_ARGS=()
+          if [ "$SLOT" != "production" ]; then
+            SLOT_ARGS=(--slot "$SLOT")
+          fi
+
+          az webapp config appsettings set \
+            --resource-group "${{ needs.resolve.outputs.resource-group }}" \
+            --name "${{ needs.resolve.outputs.app-name }}" \
+            "${SLOT_ARGS[@]}" \
+            --settings \
+              HONEYDRUNK_NODE_ID=pulse \
+              AZURE_KEYVAULT_URI="${{ needs.resolve.outputs.keyvault-uri }}" \
+              AZURE_APPCONFIG_ENDPOINT="${{ needs.resolve.outputs.appconfig-endpoint }}" \
+            --output none
+
+  deploy:
+    name: Deploy to ${{ inputs.environment || (github.event_name == 'push' && 'development') || 'production' }}
+    needs: [build-image, resolve, configure]
+    uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/job-deploy-container.yml@main
+    with:
+      acr-registry: ${{ vars.ACR_REGISTRY }}
+      container-image: ${{ needs.build-image.outputs.container-image }}
+      app-name: ${{ needs.resolve.outputs.app-name }}
+      resource-group: ${{ needs.resolve.outputs.resource-group }}
+      slot-name: ${{ needs.resolve.outputs.use-slot-swap == 'true' && 'staging' || 'production' }}
+      swap-to-production: ${{ needs.resolve.outputs.use-slot-swap == 'true' }}
+      health-check-url: '/health'
+      health-check-timeout: 120
+      startup-wait: 30
+      azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+      azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+      azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      keyvault-name: ${{ needs.resolve.outputs.keyvault-name }}
+      keyvault-secrets: ${{ needs.resolve.outputs.keyvault-secrets }}

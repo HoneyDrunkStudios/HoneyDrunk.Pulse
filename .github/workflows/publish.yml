@@ -1,0 +1,115 @@
+name: Publish to NuGet
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (without v prefix, e.g., 0.1.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  prepare:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      version-tag: ${{ steps.get_version.outputs.version-tag }}
+    steps:
+      - name: Determine version
+        id: get_version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+            VERSION_TAG="v${VERSION}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            VERSION_TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=$VERSION" >>"$GITHUB_OUTPUT"
+          echo "version-tag=$VERSION_TAG" >>"$GITHUB_OUTPUT"
+          echo "Publishing version: $VERSION"
+          echo "Publishing tag: $VERSION_TAG"
+
+  release:
+    name: Build, Pack & Publish
+    needs: prepare
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      security-events: write
+    uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/release.yml@main
+    with:
+      dotnet-version: '10.0.x'
+      configuration: 'Release'
+      runs-on: 'ubuntu-latest'
+      project-path: 'HoneyDrunk.Pulse/HoneyDrunk.Pulse.slnx'
+      enable-nuget-publish: true
+      nuget-source: 'https://api.nuget.org/v3/index.json'
+      enable-container-build: true
+      dockerfile-path: 'HoneyDrunk.Pulse/Pulse.Collector/Dockerfile'
+      docker-build-context: 'HoneyDrunk.Pulse'
+      container-registry: ${{ vars.ACR_REGISTRY || 'ghcr.io' }}
+      container-image-name: 'honeydrunkstudios/pulse-collector'
+      azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+      azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+      azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      actions-ref: 'main'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}
+
+  github-release:
+    name: Create GitHub Release
+    needs: [prepare, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout Actions
+        uses: actions/checkout@v4
+        with:
+          repository: HoneyDrunkStudios/HoneyDrunk.Actions
+          ref: main
+          path: .actions
+
+      - name: Generate Release Notes
+        id: notes
+        uses: ./.actions/.github/actions/release/generate-notes
+        with:
+          version: ${{ needs.prepare.outputs.version }}
+          product-name: HoneyDrunk.Pulse
+          product-description: 'Unified observability platform for HoneyDrunk.OS -- telemetry collection, routing, and multi-sink export for .NET 10.'
+          nuget-packages: |
+            HoneyDrunk.Pulse.Contracts
+            HoneyDrunk.Telemetry.Abstractions
+            HoneyDrunk.Telemetry.OpenTelemetry
+            HoneyDrunk.Telemetry.Sink.AzureMonitor
+            HoneyDrunk.Telemetry.Sink.Loki
+            HoneyDrunk.Telemetry.Sink.Mimir
+            HoneyDrunk.Telemetry.Sink.PostHog
+            HoneyDrunk.Telemetry.Sink.Sentry
+            HoneyDrunk.Telemetry.Sink.Tempo
+          docs-url: 'https://github.com/HoneyDrunkStudios/HoneyDrunk.Pulse#readme'
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.version-tag }}
+          name: HoneyDrunk.Pulse ${{ needs.prepare.outputs.version-tag }}
+          body: ${{ steps.notes.outputs.body }}
+          generate_release_notes: ${{ steps.notes.outputs.has-changelog == 'false' }}
+          draft: false
+          prerelease: false

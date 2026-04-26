@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/Pipelines/">
+    <File Path="../.github/workflows/deploy.yml" />
+    <File Path="../.github/workflows/hive-field-mirror.yml" />
+    <File Path="../.github/workflows/nightly-security.yml" />
+    <File Path="../.github/workflows/pr.yml" />
+    <File Path="../.github/workflows/publish.yml" />
+    <File Path="../.github/workflows/weekly-deps.yml" />
+  </Folder>
+  <Folder Name="/Samples/">
+    <Project Path="HoneyDrunk.Pulse.Sample.Api/HoneyDrunk.Pulse.Sample.Api.csproj" />
+    <Project Path="HoneyDrunk.Pulse.Sample.Worker/HoneyDrunk.Pulse.Sample.Worker.csproj" />
+  </Folder>
+  <Project Path="HoneyDrunk.Pulse.Contracts/HoneyDrunk.Pulse.Contracts.csproj" />
+  <Project Path="HoneyDrunk.Telemetry.Abstractions/HoneyDrunk.Telemetry.Abstractions.csproj" />
+  <Project Path="HoneyDrunk.Telemetry.OpenTelemetry/HoneyDrunk.Telemetry.OpenTelemetry.csproj" />
+  <Project Path="HoneyDrunk.Telemetry.Sink.AzureMonitor/HoneyDrunk.Telemetry.Sink.AzureMonitor.csproj" Id="78336940-5179-47b1-b784-f2afd4f25fe9" />
+  <Project Path="HoneyDrunk.Telemetry.Sink.Loki/HoneyDrunk.Telemetry.Sink.Loki.csproj" Id="9669c11d-59ff-449b-a7b7-e5a0b36673ef" />
+  <Project Path="HoneyDrunk.Telemetry.Sink.Mimir/HoneyDrunk.Telemetry.Sink.Mimir.csproj" Id="ec868b43-6310-4dd1-9dc3-f43d41eb6426" />
+  <Project Path="HoneyDrunk.Telemetry.Sink.PostHog/HoneyDrunk.Telemetry.Sink.PostHog.csproj" />
+  <Project Path="HoneyDrunk.Telemetry.Sink.Sentry/HoneyDrunk.Telemetry.Sink.Sentry.csproj" />
+  <Project Path="HoneyDrunk.Telemetry.Sink.Tempo/HoneyDrunk.Telemetry.Sink.Tempo.csproj" Id="643a4709-d6af-497d-aa52-bf3c5751c194" />
+  <Project Path="Pulse.Collector/HoneyDrunk.Pulse.Collector.csproj" />
+  <Project Path="Pulse.Tests/HoneyDrunk.Pulse.Tests.csproj" />
+</Solution>
