@@ -63,6 +63,12 @@ public sealed class OtlpTraceService(
 
             return new ExportTraceServiceResponse();
         }
+        catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+        {
+            // Client cancelled / timed out — surface as gRPC Cancelled rather than Internal so
+            // server error rates aren't inflated by ordinary disconnects.
+            throw new RpcException(new Status(StatusCode.Cancelled, "Trace export cancelled by client"));
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error processing gRPC OTLP traces");

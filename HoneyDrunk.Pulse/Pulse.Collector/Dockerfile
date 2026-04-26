@@ -1,7 +1,11 @@
 # Build context: HoneyDrunk.Pulse/ (solution root)
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
+# Run as a non-root user. mcr.microsoft.com/dotnet/aspnet:10.0 defines APP_UID, but pinning the
+# numeric UID explicitly removes the dependency on that base-image detail and prevents the
+# directive from collapsing to USER "" if APP_UID ever becomes unset (CodeQL flags the latter
+# as a hardening risk).
+USER 1654
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081

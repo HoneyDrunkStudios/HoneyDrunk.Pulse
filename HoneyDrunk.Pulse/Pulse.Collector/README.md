@@ -114,7 +114,7 @@ cd Pulse.Collector
 dotnet run
 ```
 
-The collector will start on `http://localhost:5000` by default.
+Using the project's `launchSettings.json`, the collector starts on `http://localhost:5077` by default. (Plain `dotnet run` outside Visual Studio / `dotnet watch` falls back to ASP.NET Core's `http://localhost:5000` default unless `ASPNETCORE_URLS` is set.)
 
 ## Docker
 

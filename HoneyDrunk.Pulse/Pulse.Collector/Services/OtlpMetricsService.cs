@@ -65,6 +65,12 @@ public sealed class OtlpMetricsService(
 
             return new ExportMetricsServiceResponse();
         }
+        catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+        {
+            // Client cancelled / timed out — surface as gRPC Cancelled rather than Internal so
+            // server error rates aren't inflated by ordinary disconnects.
+            throw new RpcException(new Status(StatusCode.Cancelled, "Metrics export cancelled by client"));
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error processing gRPC OTLP metrics");

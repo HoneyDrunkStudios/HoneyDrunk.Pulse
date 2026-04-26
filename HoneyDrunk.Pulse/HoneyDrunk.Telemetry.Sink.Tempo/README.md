@@ -17,7 +17,7 @@ dotnet add package HoneyDrunk.Telemetry.Sink.Tempo
 {
   "HoneyDrunk": {
     "Tempo": {
-      "Endpoint": "http://tempo:3200",
+      "Endpoint": "http://tempo:4318",
       "TenantId": "my-tenant",
       "Username": "",
       "Password": ""
@@ -25,6 +25,8 @@ dotnet add package HoneyDrunk.Telemetry.Sink.Tempo
   }
 }
 ```
+
+`Endpoint` should point at Tempo's **OTLP HTTP receiver** — typically port `4318` (use `4317` for OTLP/gRPC). Port `3200` is Tempo's *query frontend*; sending OTLP traces there will fail.
 
 ## Features
 
