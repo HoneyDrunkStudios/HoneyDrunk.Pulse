@@ -128,7 +128,7 @@ public sealed partial class AzureMonitorSink(
             // The actual export happens through the OpenTelemetry SDK exporter pipeline
             LogDataReceived(signalType, contentType, data.Length);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogExportFailed(signalType, ex.Message);
         }

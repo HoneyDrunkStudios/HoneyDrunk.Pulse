@@ -71,7 +71,7 @@ public sealed class OtlpMetricsService(
             // server error rates aren't inflated by ordinary disconnects.
             throw new RpcException(new Status(StatusCode.Cancelled, "Metrics export cancelled by client"));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "Error processing gRPC OTLP metrics");
             throw new RpcException(new Status(StatusCode.Internal, "Error processing metrics"));

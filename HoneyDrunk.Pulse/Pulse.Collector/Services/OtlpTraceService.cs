@@ -69,7 +69,7 @@ public sealed class OtlpTraceService(
             // server error rates aren't inflated by ordinary disconnects.
             throw new RpcException(new Status(StatusCode.Cancelled, "Trace export cancelled by client"));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "Error processing gRPC OTLP traces");
             throw new RpcException(new Status(StatusCode.Internal, "Error processing traces"));

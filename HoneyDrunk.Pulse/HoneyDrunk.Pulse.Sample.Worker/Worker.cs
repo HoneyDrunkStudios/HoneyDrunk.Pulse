@@ -72,7 +72,7 @@ public sealed partial class Worker(ILogger<Worker> logger, IAnalyticsEmitter ana
                 // Graceful shutdown
                 break;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 LogJobError(ex, _jobCounter);
                 activity?.SetStatus(ActivityStatusCode.Error, ex.Message);

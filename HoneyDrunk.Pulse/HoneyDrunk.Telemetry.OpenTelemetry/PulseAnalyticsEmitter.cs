@@ -89,8 +89,10 @@ public sealed partial class PulseAnalyticsEmitter(
             // Graceful shutdown
             throw;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
+            // HttpClient timeouts surface as TaskCanceledException with the token NOT cancelled —
+            // those should be treated as recoverable send failures, not propagated as cancellation.
             LogUnexpectedError(ex, eventsList.Count);
         }
     }

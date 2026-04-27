@@ -158,8 +158,10 @@ public sealed partial class PostHogSink : IAnalyticsSink, IDisposable
 
             LogEventsSent(eventsToSend.Count);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
+            // HttpClient timeouts surface as TaskCanceledException with the token NOT cancelled —
+            // those should re-queue for the next flush, not propagate as cancellation.
             LogSendFailed(ex, eventsToSend.Count);
 
             // Re-add events that failed to send

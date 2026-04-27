@@ -95,7 +95,7 @@ public static class OtlpEndpoints
                 ErrorCount = result.ErrorSpans.Count,
             });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogTracesRequestError(ex);
             return Results.Problem("Error processing traces", statusCode: 500);
@@ -136,7 +136,7 @@ public static class OtlpEndpoints
 
             return Results.Ok(new { Status = "accepted", result.MetricCount, result.DataPointCount });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogMetricsRequestError(ex);
             return Results.Problem("Error processing metrics", statusCode: 500);
@@ -185,7 +185,7 @@ public static class OtlpEndpoints
                 ErrorLogCount = result.ErrorLogs.Count,
             });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogLogsRequestError(ex);
             return Results.Problem("Error processing logs", statusCode: 500);
@@ -250,7 +250,7 @@ public static class OtlpEndpoints
             logger.LogAnalyticsInvalidJson(ex);
             return Results.BadRequest(new { Error = "Invalid JSON format" });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogAnalyticsRequestError(ex);
             return Results.Problem("Error processing analytics events", statusCode: 500);
@@ -309,7 +309,7 @@ public static class OtlpEndpoints
             logger.LogErrorReportInvalidJson(ex);
             return Results.BadRequest(new { Error = "Invalid JSON format" });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogErrorReportRequestError(ex);
             return Results.Problem("Error processing error report", statusCode: 500);
