@@ -71,7 +71,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             return new OtlpTraceResult(estimatedSpanCount, resourceNames, errorSpans);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogTraceParseError(ex);
             return OtlpTraceResult.Empty;
@@ -119,7 +119,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             return new OtlpTraceResult(spanCount, [.. resourceNames], errorSpans);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogTraceParseError(ex);
             return OtlpTraceResult.Empty;
@@ -156,7 +156,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             return new OtlpMetricsResult(estimatedMetricCount, estimatedDataPointCount, resourceNames);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogMetricParseError(ex);
             return OtlpMetricsResult.Empty;
@@ -198,7 +198,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             return new OtlpLogsResult(estimatedLogCount, resourceNames, errorLogs, maxSeverity);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogLogParseError(ex);
             return OtlpLogsResult.Empty;
@@ -254,7 +254,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             return new OtlpLogsResult(logCount, [.. resourceNames], errorLogs, maxSeverity);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogLogParseError(ex);
             return OtlpLogsResult.Empty;
@@ -447,16 +447,13 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             {
                 if (attr.TryGetProperty("key", out var key) &&
                     key.GetString()?.Equals("service.name", StringComparison.OrdinalIgnoreCase) == true &&
-                    attr.TryGetProperty("value", out var value))
+                    attr.TryGetProperty("value", out var value) &&
+                    value.TryGetProperty("stringValue", out var stringValue))
                 {
-                    // OTLP attribute values can be in different formats
-                    if (value.TryGetProperty("stringValue", out var stringValue))
+                    var serviceName = stringValue.GetString();
+                    if (!string.IsNullOrWhiteSpace(serviceName))
                     {
-                        var serviceName = stringValue.GetString();
-                        if (!string.IsNullOrWhiteSpace(serviceName))
-                        {
-                            names.Add(serviceName);
-                        }
+                        names.Add(serviceName);
                     }
                 }
             }
@@ -714,22 +711,18 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
         // Get message from body
         string? message = null;
-        if (logRecord.TryGetProperty("body", out var body))
+        if (logRecord.TryGetProperty("body", out var body) &&
+            body.TryGetProperty("stringValue", out var strVal))
         {
-            if (body.TryGetProperty("stringValue", out var strVal))
-            {
-                message = strVal.GetString();
-            }
+            message = strVal.GetString();
         }
 
         // Get timestamp
         var timestamp = DateTimeOffset.UtcNow;
-        if (logRecord.TryGetProperty("timeUnixNano", out var timeNano))
+        if (logRecord.TryGetProperty("timeUnixNano", out var timeNano) &&
+            timeNano.TryGetUInt64(out var nanos))
         {
-            if (timeNano.TryGetUInt64(out var nanos))
-            {
-                timestamp = DateTimeOffset.FromUnixTimeMilliseconds((long)(nanos / 1_000_000));
-            }
+            timestamp = DateTimeOffset.FromUnixTimeMilliseconds((long)(nanos / 1_000_000));
         }
 
         // Get trace/span IDs
@@ -877,7 +870,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             return Math.Max(1, spanCount);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogJsonSpanParseFallback(ex);
             return Math.Max(1, bytes.Length / 300);
@@ -916,7 +909,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             return Math.Max(1, metricCount);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogJsonMetricParseFallback(ex);
             return Math.Max(1, bytes.Length / 100);
@@ -955,7 +948,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             return Math.Max(1, logCount);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogJsonLogParseFallback(ex);
             return Math.Max(1, bytes.Length / 150);
@@ -990,7 +983,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                     return [.. names];
                 }
             }
-            catch
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Not a trace request, try logs
             }
@@ -1007,7 +1000,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                     }
                 }
             }
-            catch
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Not a logs request either, return empty
             }
@@ -1025,7 +1018,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             ExtractServiceNamesFromResourceArray(root, "resourceMetrics", names);
             ExtractServiceNamesFromResourceArray(root, "resourceLogs", names);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogServiceNameExtractionFailed(ex);
         }
@@ -1084,7 +1077,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogErrorSpanExtractionFailed(ex);
         }
@@ -1120,7 +1113,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogProtobufTraceParseError(ex);
         }
@@ -1179,7 +1172,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogErrorLogExtractionFailed(ex);
         }
@@ -1239,7 +1232,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 }
             }
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Ignore parsing errors for severity extraction
         }
@@ -1273,7 +1266,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 }
             }
         }
-        catch
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Ignore parsing errors for severity extraction
         }
@@ -1309,7 +1302,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogProtobufLogParseError(ex);
         }

@@ -318,7 +318,7 @@ public sealed partial class IngestionPipeline(
                 {
                     await analyticsSink.CaptureBatchAsync(eventList, cancellationToken).ConfigureAwait(false);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not OperationCanceledException)
                 {
                     LogAnalyticsSinkForwardingFailed(ex);
                     sinkFailures++;
@@ -385,7 +385,7 @@ public sealed partial class IngestionPipeline(
 
             LogErrorEventProcessed(errorEvent.Message ?? "Exception");
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogSentryRoutingError(ex);
             CollectorTelemetry.RecordError("sentry_routing");
@@ -425,7 +425,7 @@ public sealed partial class IngestionPipeline(
             {
                 await sink.ExportAsync(data, contentType, cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 LogTraceSinkForwardingFailed(ex);
                 failures++;
@@ -452,7 +452,7 @@ public sealed partial class IngestionPipeline(
             {
                 await sink.ExportAsync(data, contentType, cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 LogMetricsSinkForwardingFailed(ex);
                 failures++;
@@ -491,7 +491,7 @@ public sealed partial class IngestionPipeline(
 
                 await sink.ExportAsync(data, contentType, cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 LogLogsSinkForwardingFailed(ex);
                 failures++;
@@ -568,7 +568,7 @@ public sealed partial class IngestionPipeline(
         {
             await publisher.PublishAsync(ingestionEvent, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogTransportPublishFailed(ex, sourceName);
             CollectorTelemetry.RecordError("transport_publish");
@@ -644,7 +644,7 @@ public sealed partial class IngestionPipeline(
 
                 LogErrorSpanForwarded(errorSpan.SpanName, errorSpan.ServiceName ?? "unknown");
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 LogErrorSpanForwardingFailed(ex, errorSpan.SpanName);
             }
@@ -724,7 +724,7 @@ public sealed partial class IngestionPipeline(
 
                 LogErrorLogForwarded(errorLog.SeverityText ?? "ERROR", sourceName ?? errorLog.ServiceName ?? "unknown");
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 LogErrorLogForwardingFailed(ex, errorLog.Message ?? "Error log");
             }

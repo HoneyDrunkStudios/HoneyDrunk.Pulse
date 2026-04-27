@@ -158,7 +158,7 @@ public sealed partial class PostHogSink : IAnalyticsSink, IDisposable
 
             LogEventsSent(eventsToSend.Count);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogSendFailed(ex, eventsToSend.Count);
 

@@ -70,7 +70,7 @@ public sealed class OtlpLogsService(
             // server error rates aren't inflated by ordinary disconnects.
             throw new RpcException(new Status(StatusCode.Cancelled, "Logs export cancelled by client"));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "Error processing gRPC OTLP logs");
             throw new RpcException(new Status(StatusCode.Internal, "Error processing logs"));

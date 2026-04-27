@@ -89,7 +89,7 @@ public sealed partial class PulseAnalyticsEmitter(
             // Graceful shutdown
             throw;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             LogUnexpectedError(ex, eventsList.Count);
         }
