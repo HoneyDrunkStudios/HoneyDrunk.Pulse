@@ -1,0 +1,50 @@
+# Trivy ignore list for Pulse.Collector container scans.
+#
+# Each entry suppresses a specific CVE that Trivy raises against the base image
+# (mcr.microsoft.com/dotnet/aspnet:10.0). All entries here meet ALL of the following criteria
+# at the time they were added — re-evaluate if any criterion no longer holds:
+#
+#   1. Severity is LOW or MEDIUM (no HIGH/CRITICAL is listed below — those would block).
+#   2. The vulnerability is in an OS package shipped by the .NET base image, not in
+#      HoneyDrunk-authored code or .NET runtime libraries.
+#   3. There is no fixed version available in the upstream Ubuntu repositories at the time of
+#      writing (or the fix is not yet incorporated into Microsoft's published base image).
+#   4. The vulnerable code path is not reached at runtime by Pulse.Collector — the container
+#      runs as a non-root user (USER 1654), only listens on the OTLP HTTP/gRPC ingress, and
+#      does not invoke mount/dpkg/iconv/libcap interactively.
+#
+# When Microsoft refreshes the dotnet/aspnet:10.0 base image (typically monthly), CVEs whose
+# fixed versions are now present should be removed from this list to restore the gate. Treat
+# this file as a snapshot, not a permanent allowlist.
+#
+# Authoritative source for each entry:  https://avd.aquasec.com/nvd/<cve-id>
+
+# --- util-linux (mount TOCTOU race; mount is not invoked by the running app) ---
+CVE-2026-27456
+
+# --- dpkg (DoS via malformed .deb during dpkg-deb extraction; dpkg is not run inside the app) ---
+CVE-2026-2219
+
+# --- glibc (libc6) — runtime dependencies, no fix available upstream as of writing ---
+CVE-2026-4046  # iconv() crash on IBM1390/IBM1399 input
+CVE-2026-4437  # gethostbyaddr DNS-spec violation on crafted response
+CVE-2026-4438  # gethostbyaddr returns invalid hostname
+CVE-2025-5222  # glibc
+
+# --- libcap2 (cap_set_file TOCTOU; relies on local unprivileged user with write access to
+#     parent directory of an SUID binary — Pulse.Collector image has no SUID binaries the
+#     non-root app user can rewrite) ---
+CVE-2026-4878
+
+# --- libgcrypt20 (Marvin attack timing side-channel on RSA; requires interactive RSA decrypt
+#     of attacker-supplied ciphertexts, which the collector does not perform) ---
+CVE-2024-2236
+
+# --- pam (LOW; runtime PAM auth not used by the collector process) ---
+CVE-2024-56433
+
+# --- perl-base (LOW; perl is not invoked at runtime by the collector) ---
+CVE-2025-45582
+
+# --- gnutls (LOW; TLS termination is handled by the .NET runtime / Kestrel, not gnutls) ---
+CVE-2026-5704
