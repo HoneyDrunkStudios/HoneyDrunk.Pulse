@@ -41,6 +41,8 @@ public sealed class OtlpLogsService(
             var sourceName = context.RequestHeaders.GetValue("x-source-service")
                 ?? (result.ResourceNames.Count > 0 ? result.ResourceNames[0] : null);
             var sourceNodeId = context.RequestHeaders.GetValue("x-source-nodeid");
+            var tenantId = context.RequestHeaders.GetValue("x-tenant-id")
+                ?? context.RequestHeaders.GetValue("x-tenantid");
 
             // Process through the pipeline with error logs and raw bytes for sink forwarding
             await pipeline.ProcessLogsAsync(
@@ -51,6 +53,7 @@ public sealed class OtlpLogsService(
                 rawOtlpData: rawOtlpData,
                 contentType: "application/x-protobuf",
                 maxSeverityNumber: result.MaxSeverityNumber,
+                tenantId: tenantId,
                 cancellationToken: context.CancellationToken).ConfigureAwait(false);
 
             if (logger.IsEnabled(LogLevel.Debug))

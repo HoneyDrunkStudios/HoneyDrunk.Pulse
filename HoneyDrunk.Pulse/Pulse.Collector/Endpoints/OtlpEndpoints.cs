@@ -4,6 +4,7 @@
 
 using HoneyDrunk.Pulse.Collector.Ingestion;
 using HoneyDrunk.Telemetry.Abstractions.Models;
+using HoneyDrunk.Telemetry.Abstractions.Tags;
 using System.Text.Json;
 
 namespace HoneyDrunk.Pulse.Collector.Endpoints;
@@ -53,6 +54,10 @@ public static class OtlpEndpoints
         return endpoints;
     }
 
+    private static string? ResolveTenantId(HttpContext context)
+        => context.Request.Headers["X-Tenant-Id"].FirstOrDefault()
+            ?? context.Request.Headers["X-TenantId"].FirstOrDefault();
+
     private static async Task<IResult> HandleTracesAsync(
         HttpContext context,
         IngestionPipeline pipeline,
@@ -77,6 +82,7 @@ public static class OtlpEndpoints
             var sourceName = context.Request.Headers["X-Source-Service"].FirstOrDefault()
                 ?? (result.ResourceNames.Count > 0 ? result.ResourceNames[0] : null);
             var sourceNodeId = context.Request.Headers["X-Source-NodeId"].FirstOrDefault();
+            var tenantId = ResolveTenantId(context);
 
             // Pass error spans for forwarding to Sentry and raw OTLP data for trace sinks
             await pipeline.ProcessTracesAsync(
@@ -86,6 +92,7 @@ public static class OtlpEndpoints
                 result.ErrorSpans,
                 rawOtlpData: rawOtlpData,
                 contentType: contentType,
+                tenantId: tenantId,
                 cancellationToken: context.RequestAborted).ConfigureAwait(false);
 
             return Results.Ok(new
@@ -125,6 +132,7 @@ public static class OtlpEndpoints
             var sourceName = context.Request.Headers["X-Source-Service"].FirstOrDefault()
                 ?? (result.ResourceNames.Count > 0 ? result.ResourceNames[0] : null);
             var sourceNodeId = context.Request.Headers["X-Source-NodeId"].FirstOrDefault();
+            var tenantId = ResolveTenantId(context);
 
             await pipeline.ProcessMetricsAsync(
                 result.MetricCount,
@@ -132,6 +140,7 @@ public static class OtlpEndpoints
                 sourceNodeId,
                 rawOtlpData: rawOtlpData,
                 contentType: contentType,
+                tenantId: tenantId,
                 cancellationToken: context.RequestAborted).ConfigureAwait(false);
 
             return Results.Ok(new { Status = "accepted", result.MetricCount, result.DataPointCount });
@@ -166,6 +175,7 @@ public static class OtlpEndpoints
             var sourceName = context.Request.Headers["X-Source-Service"].FirstOrDefault()
                 ?? (result.ResourceNames.Count > 0 ? result.ResourceNames[0] : null);
             var sourceNodeId = context.Request.Headers["X-Source-NodeId"].FirstOrDefault();
+            var tenantId = ResolveTenantId(context);
 
             // Pass error logs for forwarding to Sentry and raw OTLP data for log sinks
             await pipeline.ProcessLogsAsync(
@@ -176,6 +186,7 @@ public static class OtlpEndpoints
                 rawOtlpData: rawOtlpData,
                 contentType: contentType,
                 maxSeverityNumber: result.MaxSeverityNumber,
+                tenantId: tenantId,
                 cancellationToken: context.RequestAborted).ConfigureAwait(false);
 
             return Results.Ok(new
@@ -218,6 +229,7 @@ public static class OtlpEndpoints
                     SessionId = e.SessionId,
                     CorrelationId = e.CorrelationId,
                     NodeId = e.NodeId,
+                    TenantId = e.TenantId,
                     Environment = e.Environment,
                 };
 
@@ -236,12 +248,14 @@ public static class OtlpEndpoints
                 ?? context.Request.Headers["X-Source-Service"].FirstOrDefault();
             var sourceNodeId = request.SourceNodeId
                 ?? context.Request.Headers["X-Source-NodeId"].FirstOrDefault();
+            var tenantId = ResolveTenantId(context);
 
             await pipeline.ProcessAnalyticsEventsAsync(
                 events,
                 sourceName,
                 sourceNodeId,
-                context.RequestAborted).ConfigureAwait(false);
+                tenantId: tenantId,
+                cancellationToken: context.RequestAborted).ConfigureAwait(false);
 
             return Results.Ok(new { Status = "accepted", events.Count });
         }
@@ -300,6 +314,12 @@ public static class OtlpEndpoints
             }
 
             var sourceName = context.Request.Headers["X-Source-Service"].FirstOrDefault();
+            var tenantId = request.TenantId ?? ResolveTenantId(context);
+            if (!string.IsNullOrEmpty(tenantId))
+            {
+                errorEvent.Tags[TelemetryTagKeys.HoneyDrunk.TenantId] = tenantId;
+            }
+
             await pipeline.ProcessErrorAsync(errorEvent, sourceName, context.RequestAborted).ConfigureAwait(false);
 
             return Results.Ok(new { Status = "accepted" });

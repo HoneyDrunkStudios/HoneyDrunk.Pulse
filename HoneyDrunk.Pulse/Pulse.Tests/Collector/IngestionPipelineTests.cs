@@ -180,6 +180,28 @@ public class IngestionPipelineTests
     }
 
     /// <summary>
+    /// Tests that header-level tenant context is copied to analytics events without tenant IDs.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task ProcessAnalyticsEventsAsync_AppliesTenantIdToEvents()
+    {
+        // Arrange
+        var pipeline = CreatePipeline();
+        var events = new List<TelemetryEvent>
+        {
+            TelemetryEvent.Create("feature.used").WithDistinctId("user-1"),
+        };
+
+        // Act
+        await pipeline.ProcessAnalyticsEventsAsync(events, "app-service", "node-4", tenantId: "tenant-acme");
+
+        // Assert
+        _analyticsSink.CapturedBatches.Should().HaveCount(1);
+        _analyticsSink.CapturedBatches[0][0].TenantId.Should().Be("tenant-acme");
+    }
+
+    /// <summary>
     /// Tests that ProcessAnalyticsEventsAsync skips when sink is disabled.
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>

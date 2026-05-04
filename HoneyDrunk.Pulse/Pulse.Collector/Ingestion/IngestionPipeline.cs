@@ -8,6 +8,7 @@ using HoneyDrunk.Pulse.Collector.Telemetry;
 using HoneyDrunk.Pulse.Collector.Transport;
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
+using HoneyDrunk.Telemetry.Abstractions.Tags;
 using HoneyDrunk.Telemetry.Sink.Loki.Options;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -74,6 +75,7 @@ public sealed partial class IngestionPipeline(
     /// <param name="errorSpans">Error spans extracted from traces for forwarding to Sentry.</param>
     /// <param name="rawOtlpData">Raw OTLP protobuf data for forwarding to trace sinks.</param>
     /// <param name="contentType">Content type of the raw data (e.g., application/x-protobuf).</param>
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task ProcessTracesAsync(
@@ -83,6 +85,7 @@ public sealed partial class IngestionPipeline(
         IReadOnlyList<ExtractedErrorSpan>? errorSpans = null,
         ReadOnlyMemory<byte>? rawOtlpData = null,
         string? contentType = null,
+        string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessTraces");
@@ -91,12 +94,12 @@ public sealed partial class IngestionPipeline(
 
         try
         {
-            CollectorTelemetry.RecordTracesIngested(traceCount, sourceName);
+            CollectorTelemetry.RecordTracesIngested(traceCount, sourceName, tenantId);
 
             // Forward error spans to Sentry
             if (errorSpans != null && errorSpans.Count > 0 && errorSink != null)
             {
-                await ForwardErrorSpansToSentryAsync(errorSpans, cancellationToken).ConfigureAwait(false);
+                await ForwardErrorSpansToSentryAsync(errorSpans, tenantId, cancellationToken).ConfigureAwait(false);
             }
 
             // Forward raw OTLP data to all trace sinks (Tempo, AzureMonitor, etc.)
@@ -129,14 +132,14 @@ public sealed partial class IngestionPipeline(
         catch (Exception ex)
         {
             LogTraceProcessingError(ex, sourceName);
-            CollectorTelemetry.RecordError("trace_processing");
+            CollectorTelemetry.RecordError("trace_processing", tenantId);
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
         finally
         {
             stopwatch.Stop();
-            CollectorTelemetry.RecordProcessingDuration(stopwatch.ElapsedMilliseconds, sourceName);
+            CollectorTelemetry.RecordProcessingDuration(stopwatch.ElapsedMilliseconds, sourceName, tenantId);
         }
     }
 
@@ -148,6 +151,7 @@ public sealed partial class IngestionPipeline(
     /// <param name="sourceNodeId">The source node ID.</param>
     /// <param name="rawOtlpData">Raw OTLP protobuf data for forwarding to metrics sinks.</param>
     /// <param name="contentType">Content type of the raw data (e.g., application/x-protobuf).</param>
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task ProcessMetricsAsync(
@@ -156,6 +160,7 @@ public sealed partial class IngestionPipeline(
         string? sourceNodeId,
         ReadOnlyMemory<byte>? rawOtlpData = null,
         string? contentType = null,
+        string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessMetrics");
@@ -164,7 +169,7 @@ public sealed partial class IngestionPipeline(
 
         try
         {
-            CollectorTelemetry.RecordMetricsIngested(metricCount, sourceName);
+            CollectorTelemetry.RecordMetricsIngested(metricCount, sourceName, tenantId);
 
             // Forward raw OTLP data to all metrics sinks (Mimir, AzureMonitor, etc.)
             if (rawOtlpData.HasValue && _metricsSinks.Count > 0)
@@ -196,14 +201,14 @@ public sealed partial class IngestionPipeline(
         catch (Exception ex)
         {
             LogMetricProcessingError(ex, sourceName);
-            CollectorTelemetry.RecordError("metric_processing");
+            CollectorTelemetry.RecordError("metric_processing", tenantId);
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
         finally
         {
             stopwatch.Stop();
-            CollectorTelemetry.RecordProcessingDuration(stopwatch.ElapsedMilliseconds, sourceName);
+            CollectorTelemetry.RecordProcessingDuration(stopwatch.ElapsedMilliseconds, sourceName, tenantId);
         }
     }
 
@@ -217,6 +222,7 @@ public sealed partial class IngestionPipeline(
     /// <param name="rawOtlpData">Raw OTLP protobuf data for forwarding to log sinks.</param>
     /// <param name="contentType">Content type of the raw data (e.g., application/x-protobuf).</param>
     /// <param name="maxSeverityNumber">The maximum severity number in the batch for log level filtering.</param>
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task ProcessLogsAsync(
@@ -227,6 +233,7 @@ public sealed partial class IngestionPipeline(
         ReadOnlyMemory<byte>? rawOtlpData = null,
         string? contentType = null,
         int maxSeverityNumber = 0,
+        string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessLogs");
@@ -235,12 +242,12 @@ public sealed partial class IngestionPipeline(
 
         try
         {
-            CollectorTelemetry.RecordLogsIngested(logCount, sourceName);
+            CollectorTelemetry.RecordLogsIngested(logCount, sourceName, tenantId);
 
             // Forward error logs to Sentry
             if (errorLogs != null && errorLogs.Count > 0 && errorSink != null)
             {
-                await ForwardErrorLogsToSentryAsync(errorLogs, sourceName, cancellationToken).ConfigureAwait(false);
+                await ForwardErrorLogsToSentryAsync(errorLogs, sourceName, tenantId, cancellationToken).ConfigureAwait(false);
             }
 
             // Forward raw OTLP data to all log sinks (Loki, AzureMonitor, etc.)
@@ -274,14 +281,14 @@ public sealed partial class IngestionPipeline(
         catch (Exception ex)
         {
             LogLogProcessingError(ex, sourceName);
-            CollectorTelemetry.RecordError("log_processing");
+            CollectorTelemetry.RecordError("log_processing", tenantId);
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
         finally
         {
             stopwatch.Stop();
-            CollectorTelemetry.RecordProcessingDuration(stopwatch.ElapsedMilliseconds, sourceName);
+            CollectorTelemetry.RecordProcessingDuration(stopwatch.ElapsedMilliseconds, sourceName, tenantId);
         }
     }
 
@@ -291,12 +298,14 @@ public sealed partial class IngestionPipeline(
     /// <param name="events">The analytics events.</param>
     /// <param name="sourceName">The source service name.</param>
     /// <param name="sourceNodeId">The source node ID.</param>
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task ProcessAnalyticsEventsAsync(
         IEnumerable<TelemetryEvent> events,
         string? sourceName,
         string? sourceNodeId,
+        string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessAnalyticsEvents");
@@ -306,9 +315,15 @@ public sealed partial class IngestionPipeline(
 
         try
         {
-            // Enrich analytics events with HoneyDrunk context
+            // Enrich analytics events with HoneyDrunk context.
+            // Header-level tenancy is copied onto events so downstream analytics sinks receive tenant_id.
             foreach (var evt in eventList)
             {
+                if (string.IsNullOrEmpty(evt.TenantId))
+                {
+                    evt.TenantId = tenantId;
+                }
+
                 enricher.EnrichTelemetryEvent(evt, sourceName);
             }
 
@@ -325,7 +340,8 @@ public sealed partial class IngestionPipeline(
                 }
             }
 
-            CollectorTelemetry.RecordAnalyticsEventsIngested(eventList.Count, sourceName);
+            tenantId ??= eventList.FirstOrDefault(evt => !string.IsNullOrEmpty(evt.TenantId))?.TenantId;
+            CollectorTelemetry.RecordAnalyticsEventsIngested(eventList.Count, sourceName, tenantId);
 
             LogAnalyticsEventsProcessed(eventList.Count, sourceName ?? "unknown");
 
@@ -348,14 +364,14 @@ public sealed partial class IngestionPipeline(
         catch (Exception ex)
         {
             LogAnalyticsProcessingError(ex, sourceName);
-            CollectorTelemetry.RecordError("analytics_processing");
+            CollectorTelemetry.RecordError("analytics_processing", tenantId);
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
         finally
         {
             stopwatch.Stop();
-            CollectorTelemetry.RecordProcessingDuration(stopwatch.ElapsedMilliseconds, sourceName);
+            CollectorTelemetry.RecordProcessingDuration(stopwatch.ElapsedMilliseconds, sourceName, tenantId);
         }
     }
 
@@ -580,6 +596,7 @@ public sealed partial class IngestionPipeline(
     /// </summary>
     private async Task ForwardErrorSpansToSentryAsync(
         IReadOnlyList<ExtractedErrorSpan> errorSpans,
+        string? tenantId,
         CancellationToken cancellationToken)
     {
         foreach (var errorSpan in errorSpans)
@@ -600,6 +617,11 @@ public sealed partial class IngestionPipeline(
 
                 // Add tags
                 errorEvent.Tags["span.name"] = errorSpan.SpanName;
+
+                if (!string.IsNullOrEmpty(tenantId))
+                {
+                    errorEvent.Tags[TelemetryTagKeys.HoneyDrunk.TenantId] = tenantId;
+                }
 
                 if (!string.IsNullOrEmpty(errorSpan.TraceId))
                 {
@@ -640,7 +662,7 @@ public sealed partial class IngestionPipeline(
 
                 await errorSink!.CaptureAsync(errorEvent, cancellationToken).ConfigureAwait(false);
 
-                CollectorTelemetry.RecordErrorForwarded(errorSpan.ServiceName);
+                CollectorTelemetry.RecordErrorForwarded(errorSpan.ServiceName, tenantId);
 
                 LogErrorSpanForwarded(errorSpan.SpanName, errorSpan.ServiceName ?? "unknown");
             }
@@ -657,6 +679,7 @@ public sealed partial class IngestionPipeline(
     private async Task ForwardErrorLogsToSentryAsync(
         IReadOnlyList<ExtractedErrorLog> errorLogs,
         string? sourceName,
+        string? tenantId,
         CancellationToken cancellationToken)
     {
         foreach (var errorLog in errorLogs)
@@ -672,6 +695,11 @@ public sealed partial class IngestionPipeline(
                 };
 
                 // Add log attributes as tags
+                if (!string.IsNullOrEmpty(tenantId))
+                {
+                    errorEvent.Tags[TelemetryTagKeys.HoneyDrunk.TenantId] = tenantId;
+                }
+
                 if (!string.IsNullOrEmpty(errorLog.TraceId))
                 {
                     errorEvent.Tags["trace.id"] = errorLog.TraceId;
@@ -720,7 +748,7 @@ public sealed partial class IngestionPipeline(
 
                 await errorSink!.CaptureAsync(errorEvent, cancellationToken).ConfigureAwait(false);
 
-                CollectorTelemetry.RecordErrorForwarded(sourceName ?? errorLog.ServiceName);
+                CollectorTelemetry.RecordErrorForwarded(sourceName ?? errorLog.ServiceName, tenantId);
 
                 LogErrorLogForwarded(errorLog.SeverityText ?? "ERROR", sourceName ?? errorLog.ServiceName ?? "unknown");
             }

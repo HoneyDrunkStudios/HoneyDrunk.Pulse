@@ -3,6 +3,7 @@
 // </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Conventions;
+using HoneyDrunk.Telemetry.Abstractions.Tags;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -75,9 +76,10 @@ public sealed class CollectorTelemetry
     /// </summary>
     /// <param name="count">The count.</param>
     /// <param name="sourceName">The source name.</param>
-    public static void RecordTracesIngested(long count, string? sourceName = null)
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
+    public static void RecordTracesIngested(long count, string? sourceName = null, string? tenantId = null)
     {
-        var tags = CreateTags(sourceName);
+        var tags = CreateTags(sourceName, tenantId);
         TracesIngestedCounter.Add(count, tags);
     }
 
@@ -86,9 +88,10 @@ public sealed class CollectorTelemetry
     /// </summary>
     /// <param name="count">The count.</param>
     /// <param name="sourceName">The source name.</param>
-    public static void RecordMetricsIngested(long count, string? sourceName = null)
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
+    public static void RecordMetricsIngested(long count, string? sourceName = null, string? tenantId = null)
     {
-        var tags = CreateTags(sourceName);
+        var tags = CreateTags(sourceName, tenantId);
         MetricsIngestedCounter.Add(count, tags);
     }
 
@@ -97,9 +100,10 @@ public sealed class CollectorTelemetry
     /// </summary>
     /// <param name="count">The count.</param>
     /// <param name="sourceName">The source name.</param>
-    public static void RecordLogsIngested(long count, string? sourceName = null)
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
+    public static void RecordLogsIngested(long count, string? sourceName = null, string? tenantId = null)
     {
-        var tags = CreateTags(sourceName);
+        var tags = CreateTags(sourceName, tenantId);
         LogsIngestedCounter.Add(count, tags);
     }
 
@@ -108,9 +112,10 @@ public sealed class CollectorTelemetry
     /// </summary>
     /// <param name="count">The count.</param>
     /// <param name="sourceName">The source name.</param>
-    public static void RecordAnalyticsEventsIngested(long count, string? sourceName = null)
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
+    public static void RecordAnalyticsEventsIngested(long count, string? sourceName = null, string? tenantId = null)
     {
-        var tags = CreateTags(sourceName);
+        var tags = CreateTags(sourceName, tenantId);
         AnalyticsEventsIngestedCounter.Add(count, tags);
     }
 
@@ -118,18 +123,20 @@ public sealed class CollectorTelemetry
     /// Records an error during ingestion.
     /// </summary>
     /// <param name="errorType">The type of error.</param>
-    public static void RecordError(string errorType)
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
+    public static void RecordError(string errorType, string? tenantId = null)
     {
-        ErrorsCounter.Add(1, new KeyValuePair<string, object?>("error.type", errorType));
+        ErrorsCounter.Add(1, CreateTags(sourceName: null, tenantId, new KeyValuePair<string, object?>("error.type", errorType)));
     }
 
     /// <summary>
     /// Records an error forwarded to Sentry from trace spans.
     /// </summary>
     /// <param name="sourceName">The source service name.</param>
-    public static void RecordErrorForwarded(string? sourceName = null)
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
+    public static void RecordErrorForwarded(string? sourceName = null, string? tenantId = null)
     {
-        var tags = CreateTags(sourceName);
+        var tags = CreateTags(sourceName, tenantId);
         ErrorsForwardedCounter.Add(1, tags);
     }
 
@@ -138,9 +145,10 @@ public sealed class CollectorTelemetry
     /// </summary>
     /// <param name="durationMs">The duration in milliseconds.</param>
     /// <param name="sourceName">The source name.</param>
-    public static void RecordProcessingDuration(double durationMs, string? sourceName = null)
+    /// <param name="tenantId">The tenant identifier carried with the telemetry batch.</param>
+    public static void RecordProcessingDuration(double durationMs, string? sourceName = null, string? tenantId = null)
     {
-        var tags = CreateTags(sourceName);
+        var tags = CreateTags(sourceName, tenantId);
         ProcessingDurationHistogram.Record(durationMs, tags);
     }
 
@@ -154,13 +162,24 @@ public sealed class CollectorTelemetry
         return ActivitySource.StartActivity(operationName, ActivityKind.Server);
     }
 
-    private static KeyValuePair<string, object?>[] CreateTags(string? sourceName)
+    private static KeyValuePair<string, object?>[] CreateTags(
+        string? sourceName,
+        string? tenantId,
+        params KeyValuePair<string, object?>[] additionalTags)
     {
-        if (string.IsNullOrEmpty(sourceName))
+        var tags = new List<KeyValuePair<string, object?>>(additionalTags.Length + 2);
+
+        if (!string.IsNullOrEmpty(sourceName))
         {
-            return [];
+            tags.Add(new KeyValuePair<string, object?>("source.name", sourceName));
         }
 
-        return [new KeyValuePair<string, object?>("source.name", sourceName)];
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            tags.Add(new KeyValuePair<string, object?>(TelemetryTagKeys.HoneyDrunk.TenantId, tenantId));
+        }
+
+        tags.AddRange(additionalTags);
+        return [.. tags];
     }
 }
