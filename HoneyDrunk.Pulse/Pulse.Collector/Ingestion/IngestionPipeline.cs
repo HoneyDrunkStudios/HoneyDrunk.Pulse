@@ -340,7 +340,7 @@ public sealed partial class IngestionPipeline(
                 }
             }
 
-            tenantId ??= eventList.FirstOrDefault(evt => !string.IsNullOrEmpty(evt.TenantId))?.TenantId;
+            tenantId ??= ResolveBatchTenantForMetrics(eventList);
             CollectorTelemetry.RecordAnalyticsEventsIngested(eventList.Count, sourceName, tenantId);
 
             LogAnalyticsEventsProcessed(eventList.Count, sourceName ?? "unknown");
@@ -428,6 +428,18 @@ public sealed partial class IngestionPipeline(
     /// Exports trace data to all registered trace sinks.
     /// </summary>
     /// <returns>The number of sinks that failed.</returns>
+    private static string? ResolveBatchTenantForMetrics(IReadOnlyCollection<TelemetryEvent> events)
+    {
+        var distinctTenantIds = events
+            .Select(evt => evt.TenantId)
+            .Where(tenant => !string.IsNullOrEmpty(tenant))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(2)
+            .ToList();
+
+        return distinctTenantIds.Count == 1 ? distinctTenantIds[0] : null;
+    }
+
     private async Task<int> ExportToTraceSinksAsync(
         ReadOnlyMemory<byte> data,
         string contentType,

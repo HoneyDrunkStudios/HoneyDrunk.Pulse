@@ -104,9 +104,9 @@ The `TelemetryEnricher` automatically stamps all telemetry with:
 - `hive.studio.id` — Studio/organization context
 - `hive.environment` — Deployment environment
 - `hive.correlation.id` — Distributed correlation
-- `honeydrunk.tenant_id` — ADR-0026 tenant context for bounded, low-cardinality reporting
+- `tenant_id` — ADR-0026 tenant context for bounded, low-cardinality reporting
 
-Tenant discipline: `tenant_id` is safe as a Pulse metric tag only while v1 paying tenants remain in the tens; continued use is bounded by Notify Cloud's cardinality kill criteria, and user/session/request identifiers must not be placed in this dimension.
+Tenant discipline: `tenant_id` is safe as a Pulse metric tag only while v1 paying tenants remain in the tens; internal traffic and malformed tenant values are not emitted as metric labels, continued use is bounded by Notify Cloud's cardinality kill criteria, and user/session/request identifiers must not be placed in this dimension.
 
 ### 📤 Transport Event Publishing
 

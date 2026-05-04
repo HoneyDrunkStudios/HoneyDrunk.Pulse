@@ -174,12 +174,22 @@ public sealed class CollectorTelemetry
             tags.Add(new KeyValuePair<string, object?>("source.name", sourceName));
         }
 
-        if (!string.IsNullOrEmpty(tenantId))
+        if (IsSafeTenantMetricTag(tenantId))
         {
             tags.Add(new KeyValuePair<string, object?>(TelemetryTagKeys.HoneyDrunk.TenantId, tenantId));
         }
 
         tags.AddRange(additionalTags);
         return [.. tags];
+    }
+
+    private static bool IsSafeTenantMetricTag(string? tenantId)
+    {
+        const string internalTenant = "00000000000000000000000000";
+        const string crockfordBase32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+        return tenantId is { Length: 26 }
+            && !string.Equals(tenantId, internalTenant, StringComparison.OrdinalIgnoreCase)
+            && tenantId.All(c => crockfordBase32.Contains(char.ToUpperInvariant(c)));
     }
 }

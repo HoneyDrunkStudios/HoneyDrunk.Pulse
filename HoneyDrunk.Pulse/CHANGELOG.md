@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [HoneyDrunk.Telemetry.Sink.Sentry](HoneyDrunk.Telemetry.Sink.Sentry/CHANGELOG.md)
 - [HoneyDrunk.Telemetry.Sink.AzureMonitor](HoneyDrunk.Telemetry.Sink.AzureMonitor/CHANGELOG.md)
 
-## [Unreleased]
+## [0.2.0] - 2026-05-04
 
 ### Changed
 

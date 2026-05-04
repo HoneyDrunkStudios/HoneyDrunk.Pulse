@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,7 +8,7 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Telemetry.Sink.Loki</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Grafana Loki log sink for HoneyDrunk telemetry. Forwards OTLP log data to Loki with configurable log level filtering and multi-tenant support.</Description>
     <PackageReleaseNotes>v0.1.0: Initial release. See CHANGELOG.md for details.</PackageReleaseNotes>
