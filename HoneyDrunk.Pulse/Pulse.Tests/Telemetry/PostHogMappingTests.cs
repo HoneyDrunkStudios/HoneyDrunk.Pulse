@@ -127,6 +127,30 @@ public class PostHogMappingTests
     }
 
     /// <summary>
+    /// Verifies that tenant context is included in the mapped event.
+    /// </summary>
+    [Fact]
+    public void Map_ShouldIncludeTenantId()
+    {
+        // Arrange
+        var options = new PostHogSinkOptions();
+        var mapper = new PostHogEventMapper(options);
+        var telemetryEvent = new TelemetryEvent
+        {
+            EventName = "test.event",
+            DistinctId = "user-1",
+            TenantId = "tenant-acme",
+        };
+
+        // Act
+        var result = mapper.Map(telemetryEvent);
+
+        // Assert
+        result.Properties.Should().ContainKey(TelemetryTagKeys.HoneyDrunk.TenantId);
+        result.Properties[TelemetryTagKeys.HoneyDrunk.TenantId].Should().Be("tenant-acme");
+    }
+
+    /// <summary>
     /// Verifies that custom properties are included in the mapped event.
     /// </summary>
     [Fact]

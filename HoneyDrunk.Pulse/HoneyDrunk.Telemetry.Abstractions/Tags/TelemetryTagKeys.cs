@@ -52,7 +52,12 @@ public static class TelemetryTagKeys
         /// <summary>
         /// The tenant ID for multi-tenant scenarios.
         /// </summary>
-        public const string TenantId = $"{Prefix}.tenant_id";
+        /// <remarks>
+        /// ADR-0026 treats this as a low-cardinality telemetry dimension: v1 paying customers are
+        /// expected in the tens, and continued use as a metric tag is bounded by Notify Cloud's
+        /// cardinality kill criteria. Do not substitute user, session, node, or request identifiers here.
+        /// </remarks>
+        public const string TenantId = "tenant_id";
 
         /// <summary>
         /// The user ID associated with the operation.

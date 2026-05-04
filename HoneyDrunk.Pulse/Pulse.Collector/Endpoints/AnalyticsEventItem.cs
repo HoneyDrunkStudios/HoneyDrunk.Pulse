@@ -45,6 +45,11 @@ public sealed class AnalyticsEventItem
     public string? NodeId { get; set; }
 
     /// <summary>
+    /// Gets or sets the tenant ID.
+    /// </summary>
+    public string? TenantId { get; set; }
+
+    /// <summary>
     /// Gets or sets the environment.
     /// </summary>
     public string? Environment { get; set; }

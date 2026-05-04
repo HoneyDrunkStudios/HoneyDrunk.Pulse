@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [HoneyDrunk.Telemetry.Sink.Sentry](HoneyDrunk.Telemetry.Sink.Sentry/CHANGELOG.md)
 - [HoneyDrunk.Telemetry.Sink.AzureMonitor](HoneyDrunk.Telemetry.Sink.AzureMonitor/CHANGELOG.md)
 
-## [Unreleased]
+## [0.2.0] - 2026-05-04
 
 ### Changed
 
@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added ADR-0026 tenant context propagation for Pulse collector ingress, analytics events, error reports, and low-cardinality collector telemetry tags.
 - Added a PostHog credential rotation canary covering per-flush Vault secret resolution.
 
 ## [0.1.0] - 2026-02-21

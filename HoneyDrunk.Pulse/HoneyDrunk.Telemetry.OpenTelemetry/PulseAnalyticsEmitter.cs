@@ -59,6 +59,7 @@ public sealed partial class PulseAnalyticsEmitter(
                     SessionId = e.SessionId,
                     CorrelationId = e.CorrelationId,
                     NodeId = e.NodeId,
+                    TenantId = e.TenantId,
                     Environment = e.Environment,
                     Properties = e.Properties,
                 })],
@@ -131,6 +132,8 @@ public sealed partial class PulseAnalyticsEmitter(
         public string? CorrelationId { get; init; }
 
         public string? NodeId { get; init; }
+
+        public string? TenantId { get; init; }
 
         public string? Environment { get; init; }
 

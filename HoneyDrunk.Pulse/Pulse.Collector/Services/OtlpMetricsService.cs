@@ -45,6 +45,8 @@ public sealed class OtlpMetricsService(
             var sourceName = context.RequestHeaders.GetValue("x-source-service")
                 ?? (result.ResourceNames.Count > 0 ? result.ResourceNames[0] : null);
             var sourceNodeId = context.RequestHeaders.GetValue("x-source-nodeid");
+            var tenantId = context.RequestHeaders.GetValue("x-tenant-id")
+                ?? context.RequestHeaders.GetValue("x-tenantid");
 
             // Process through the pipeline with raw bytes for sink forwarding
             await pipeline.ProcessMetricsAsync(
@@ -53,6 +55,7 @@ public sealed class OtlpMetricsService(
                 sourceNodeId,
                 rawOtlpData: rawOtlpData,
                 contentType: "application/x-protobuf",
+                tenantId: tenantId,
                 cancellationToken: context.CancellationToken).ConfigureAwait(false);
 
             if (logger.IsEnabled(LogLevel.Debug))
