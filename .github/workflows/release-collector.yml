@@ -1,0 +1,67 @@
+name: Release Pulse.Collector
+
+# Tag-triggered release for Pulse.Collector.
+# Push a tag like `collector-v0.1.0` to build the container image, push it
+# to the shared ACR, and roll a new revision on ca-hd-pulse-<env> via the
+# reusable job-deploy-container-app.yml (ADR-0015 hosting, ADR-0012: deploy
+# logic lives in HoneyDrunk.Actions).
+#
+# Replaces the previous App Service slot-swap deploy.yml: Pulse.Collector is
+# gRPC, and ADR-0015 puts containerized Nodes on Azure Container Apps with
+# revision-based traffic shifting (not App Service slot swap).
+
+on:
+  push:
+    tags:
+      - 'collector-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  resolve:
+    name: Resolve dev config
+    runs-on: ubuntu-latest
+    environment: dev
+    outputs:
+      acr-registry: acrhdshared${{ vars.HD_ENV }}.azurecr.io
+      container-app: ca-hd-pulse-${{ vars.HD_ENV }}
+      resource-group: rg-hd-pulse-${{ vars.HD_ENV }}
+      keyvault-name: kv-hd-pulse-${{ vars.HD_ENV }}
+      azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+      azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+      azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - name: Echo resolved targets
+        run: |
+          echo "Container App : ca-hd-pulse-${{ vars.HD_ENV }}"
+          echo "Resource Grp  : rg-hd-pulse-${{ vars.HD_ENV }}"
+          echo "ACR           : acrhdshared${{ vars.HD_ENV }}.azurecr.io"
+          echo "Key Vault     : kv-hd-pulse-${{ vars.HD_ENV }}"
+
+  deploy:
+    name: Deploy to dev
+    needs: resolve
+    uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/job-deploy-container-app.yml@main
+    with:
+      # Dockerfile declares "Build context: HoneyDrunk.Pulse/ (solution root)".
+      build-context: HoneyDrunk.Pulse
+      dockerfile: Pulse.Collector/Dockerfile
+      image-name: honeydrunk-pulse-collector
+      image-tag: ${{ github.ref_name }}
+      acr-registry: ${{ needs.resolve.outputs.acr-registry }}
+      container-app: ${{ needs.resolve.outputs.container-app }}
+      resource-group: ${{ needs.resolve.outputs.resource-group }}
+      azure-client-id: ${{ needs.resolve.outputs.azure-client-id }}
+      azure-tenant-id: ${{ needs.resolve.outputs.azure-tenant-id }}
+      azure-subscription-id: ${{ needs.resolve.outputs.azure-subscription-id }}
+      keyvault-name: ${{ needs.resolve.outputs.keyvault-name }}
+      keyvault-secrets: |
+        PostHog--ApiKey
+        Sentry--Dsn
+      # /health, /health/ready, /health/live already exist in Pulse.Collector
+      # (Endpoints/HealthEndpoints.cs) — unlike the Notify deployables.
+      health-check-url: /health
+      traffic-shift-mode: full
