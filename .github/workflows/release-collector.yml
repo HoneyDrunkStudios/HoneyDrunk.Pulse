@@ -1,0 +1,79 @@
+name: Release Pulse.Collector
+
+# Tag-triggered release for Pulse.Collector.
+# Push a tag like `collector-v0.1.0` to build the container image, push it
+# to the shared ACR, and roll a new revision on ca-hd-pulse-<env> via the
+# reusable job-deploy-container-app.yml (ADR-0015 hosting, ADR-0012: deploy
+# logic lives in HoneyDrunk.Actions).
+#
+# Replaces the previous App Service slot-swap deploy.yml: Pulse.Collector is
+# gRPC, and ADR-0015 puts containerized Nodes on Azure Container Apps with
+# revision-based traffic shifting (not App Service slot swap).
+
+on:
+  push:
+    tags:
+      - 'collector-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  resolve:
+    name: Resolve dev config
+    runs-on: ubuntu-latest
+    environment: dev
+    # Output names use underscores (not hyphens). Dot-notation access
+    # (needs.resolve.outputs.acr_registry) is unambiguous this way — avoids
+    # any reader/linter doubt about hyphenated context keys.
+    outputs:
+      acr_registry: acrhdshared${{ vars.HD_ENV }}.azurecr.io
+      container_app: ca-hd-pulse-${{ vars.HD_ENV }}
+      resource_group: rg-hd-pulse-${{ vars.HD_ENV }}
+      keyvault_name: kv-hd-pulse-${{ vars.HD_ENV }}
+      azure_client_id: ${{ vars.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+      azure_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - name: Echo resolved targets
+        run: |
+          echo "Container App : ca-hd-pulse-${{ vars.HD_ENV }}"
+          echo "Resource Grp  : rg-hd-pulse-${{ vars.HD_ENV }}"
+          echo "ACR           : acrhdshared${{ vars.HD_ENV }}.azurecr.io"
+          echo "Key Vault     : kv-hd-pulse-${{ vars.HD_ENV }}"
+
+  deploy:
+    name: Deploy to dev
+    needs: resolve
+    # A reusable-workflow caller job cannot declare `environment:` itself, so
+    # the environment is passed through as an input. The reusable workflow's
+    # deploy job runs under `environment: dev`, making the OIDC token subject
+    # repo:HoneyDrunkStudios/HoneyDrunk.Pulse:environment:dev — which matches
+    # the environment-scoped federated credential on sp-hd-pulse-dev.
+    # `resolve` (also environment: dev) separately supplies env-scoped vars.
+    uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/job-deploy-container-app.yml@main
+    with:
+      environment: dev
+      # Dockerfile declares "Build context: HoneyDrunk.Pulse/ (solution root)".
+      build-context: HoneyDrunk.Pulse
+      dockerfile: Pulse.Collector/Dockerfile
+      image-name: honeydrunk-pulse-collector
+      image-tag: ${{ github.ref_name }}
+      # Left-side keys are reusable-workflow input names (stay hyphenated);
+      # right-side are this workflow's resolve outputs (underscored).
+      acr-registry: ${{ needs.resolve.outputs.acr_registry }}
+      container-app: ${{ needs.resolve.outputs.container_app }}
+      resource-group: ${{ needs.resolve.outputs.resource_group }}
+      azure-client-id: ${{ needs.resolve.outputs.azure_client_id }}
+      azure-tenant-id: ${{ needs.resolve.outputs.azure_tenant_id }}
+      azure-subscription-id: ${{ needs.resolve.outputs.azure_subscription_id }}
+      keyvault-name: ${{ needs.resolve.outputs.keyvault_name }}
+      keyvault-secrets: |
+        PostHog--ApiKey
+        Sentry--Dsn
+      # /health, /health/ready, /health/live already exist in Pulse.Collector
+      # (Endpoints/HealthEndpoints.cs) — unlike the Notify deployables.
+      health-check-url: /health
+      traffic-shift-mode: full
