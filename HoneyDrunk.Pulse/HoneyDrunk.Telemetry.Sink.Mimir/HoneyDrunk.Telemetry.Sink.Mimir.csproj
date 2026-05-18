@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="..\HoneyDrunk.Telemetry.Sink.Shared\HttpOtlpSinkExporter.cs" Link="Shared\HttpOtlpSinkExporter.cs" />
     <Compile Include="..\HoneyDrunk.Telemetry.Sink.Shared\HttpOtlpSinkLogCallbacks.cs" Link="Shared\HttpOtlpSinkLogCallbacks.cs" />
+    <Compile Include="..\HoneyDrunk.Telemetry.Sink.Shared\HttpOtlpSinkOptionsAdapter.cs" Link="Shared\HttpOtlpSinkOptionsAdapter.cs" />
     <Compile Include="..\HoneyDrunk.Telemetry.Sink.Shared\IHttpOtlpSinkOptions.cs" Link="Shared\IHttpOtlpSinkOptions.cs" />
   </ItemGroup>
 

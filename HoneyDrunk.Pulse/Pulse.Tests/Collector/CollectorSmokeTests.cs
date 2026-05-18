@@ -38,6 +38,24 @@ public class CollectorSmokeTests(CollectorWebApplicationFactory factory) : IClas
     }
 
     /// <summary>
+    /// Verifies that deploy-time node ID configuration overrides the canonical fallback.
+    /// </summary>
+    [Fact]
+    public void CollectorNodeContext_ShouldUseConfiguredNodeIdOverride()
+    {
+        // Arrange
+        const string configuredNodeId = "honeydrunk-pulse-canary";
+        using var overrideFactory = CollectorWebApplicationFactory.CreateWithNodeId(configuredNodeId);
+        using var scope = overrideFactory.Services.CreateScope();
+
+        // Act
+        var nodeContext = scope.ServiceProvider.GetRequiredService<INodeContext>();
+
+        // Assert
+        nodeContext.NodeId.Should().Be(configuredNodeId);
+    }
+
+    /// <summary>
     /// Verifies that the health endpoint returns OK.
     /// </summary>
     /// <returns>A task representing the asynchronous test.</returns>

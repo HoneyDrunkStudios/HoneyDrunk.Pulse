@@ -1,4 +1,4 @@
-// <copyright file="HttpOtlpSinkOptions.cs" company="HoneyDrunk Studios">
+// <copyright file="IHttpOtlpSinkOptions.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
@@ -7,7 +7,7 @@ namespace HoneyDrunk.Telemetry.Sink.Shared;
 /// <summary>
 /// Shared HTTP OTLP sink option shape used by Grafana-family sinks.
 /// </summary>
-public interface IHttpOtlpSinkOptions
+internal interface IHttpOtlpSinkOptions
 {
     /// <summary>
     /// Gets the OTLP endpoint URL.

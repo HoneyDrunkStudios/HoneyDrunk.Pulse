@@ -41,7 +41,15 @@ public sealed partial class LokiSink(
         await HttpOtlpSinkExporter.ExportAsync(
             httpClient,
             secretStore,
-            _options,
+            new HttpOtlpSinkOptionsAdapter(
+                _options.Endpoint,
+                _options.Enabled,
+                _options.TimeoutSeconds,
+                _options.MaxRetries,
+                _options.Headers,
+                _options.BasicAuthSecretName,
+                _options.UsernameSecretName,
+                _options.PasswordSecretName),
             logData,
             contentType,
             new HttpOtlpSinkLogCallbacks(
