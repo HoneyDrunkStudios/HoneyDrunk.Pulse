@@ -17,6 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [HoneyDrunk.Telemetry.Sink.Sentry](HoneyDrunk.Telemetry.Sink.Sentry/CHANGELOG.md)
 - [HoneyDrunk.Telemetry.Sink.AzureMonitor](HoneyDrunk.Telemetry.Sink.AzureMonitor/CHANGELOG.md)
 
+## [0.3.0] - 2026-05-18
+
+### Changed
+
+- Updated Pulse.Collector to use Kernel's canonical `WellKnownNodes.Ops.Pulse` fallback (`honeydrunk-pulse`) while preserving `HONEYDRUNK_NODE_ID` override behavior.
+- Updated Pulse.Collector dependencies to `HoneyDrunk.Kernel` 0.7.0 and `HoneyDrunk.Transport` 0.6.0 packages for compatible Kernel context contracts.
+- Aligned `HoneyDrunk.Kernel.Abstractions` references to 0.7.0 and all package versions to 0.3.0 for the coordinated Kernel adoption release.
+- Consolidated duplicated Loki, Mimir, and Tempo HTTP OTLP export/header/auth/retry behavior behind a shared linked helper while preserving sink-specific logging and option defaults.
+
+### Added
+
+- Added collector smoke tests pinning the default runtime Node ID to the canonical Kernel well-known Pulse identity.
+- Added sink tests covering shared HTTP OTLP custom header, Basic auth, Authorization header, and retry behavior.
+
 ## [0.2.0] - 2026-05-04
 
 ### Changed

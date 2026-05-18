@@ -27,6 +27,11 @@ public class CollectorWebApplicationFactory : WebApplicationFactory<Program>
     /// Initializes a new instance of the <see cref="CollectorWebApplicationFactory"/> class.
     /// </summary>
     public CollectorWebApplicationFactory()
+        : this(null)
+    {
+    }
+
+    private CollectorWebApplicationFactory(string? honeyDrunkNodeId)
     {
         _previousAspNetCoreEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         _previousDotNetEnvironment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
@@ -38,8 +43,16 @@ public class CollectorWebApplicationFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
         Environment.SetEnvironmentVariable("AZURE_KEYVAULT_URI", null);
         Environment.SetEnvironmentVariable("AZURE_APPCONFIG_ENDPOINT", null);
-        Environment.SetEnvironmentVariable("HONEYDRUNK_NODE_ID", null);
+        Environment.SetEnvironmentVariable("HONEYDRUNK_NODE_ID", honeyDrunkNodeId);
     }
+
+    /// <summary>
+    /// Creates a factory with a configured node ID override.
+    /// </summary>
+    /// <param name="honeyDrunkNodeId">The node ID override.</param>
+    /// <returns>A collector web application factory configured with the provided node ID.</returns>
+    public static CollectorWebApplicationFactory CreateWithNodeId(string honeyDrunkNodeId) =>
+        new(honeyDrunkNodeId);
 
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)

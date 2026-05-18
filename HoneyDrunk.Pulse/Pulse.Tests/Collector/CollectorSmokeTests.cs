@@ -3,6 +3,9 @@
 // </copyright>
 
 using FluentAssertions;
+using HoneyDrunk.Kernel.Abstractions;
+using HoneyDrunk.Kernel.Abstractions.Context;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -18,6 +21,40 @@ namespace HoneyDrunk.Pulse.Tests.Collector;
 [Collection(CollectorEnvVarCollection.CollectionName)]
 public class CollectorSmokeTests(CollectorWebApplicationFactory factory) : IClassFixture<CollectorWebApplicationFactory>
 {
+    /// <summary>
+    /// Verifies that the collector defaults to Kernel's canonical Pulse Node ID.
+    /// </summary>
+    [Fact]
+    public void CollectorNodeContext_ShouldUseCanonicalPulseNodeIdFallback()
+    {
+        // Arrange
+        using var scope = factory.Services.CreateScope();
+
+        // Act
+        var nodeContext = scope.ServiceProvider.GetRequiredService<INodeContext>();
+
+        // Assert
+        nodeContext.NodeId.Should().Be(WellKnownNodes.Ops.Pulse.Value);
+    }
+
+    /// <summary>
+    /// Verifies that deploy-time node ID configuration overrides the canonical fallback.
+    /// </summary>
+    [Fact]
+    public void CollectorNodeContext_ShouldUseConfiguredNodeIdOverride()
+    {
+        // Arrange
+        const string configuredNodeId = "honeydrunk-pulse-canary";
+        using var overrideFactory = CollectorWebApplicationFactory.CreateWithNodeId(configuredNodeId);
+        using var scope = overrideFactory.Services.CreateScope();
+
+        // Act
+        var nodeContext = scope.ServiceProvider.GetRequiredService<INodeContext>();
+
+        // Assert
+        nodeContext.NodeId.Should().Be(configuredNodeId);
+    }
+
     /// <summary>
     /// Verifies that the health endpoint returns OK.
     /// </summary>

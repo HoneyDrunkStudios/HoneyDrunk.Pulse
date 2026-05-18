@@ -8,10 +8,10 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Telemetry.Sink.Sentry</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Sentry error tracking sink for HoneyDrunk telemetry. Routes error events, exceptions, and error spans to Sentry with enriched Grid context.</Description>
-    <PackageReleaseNotes>v0.1.0: Initial release. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.3.0: Kernel adoption alignment and HTTP OTLP sink helper consolidation. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>telemetry;sink;sentry;errors;error-tracking;exceptions;observability</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
