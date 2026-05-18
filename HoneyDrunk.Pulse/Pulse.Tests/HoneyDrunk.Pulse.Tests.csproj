@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -30,8 +30,11 @@
   <ItemGroup>
     <ProjectReference Include="..\HoneyDrunk.Pulse.Contracts\HoneyDrunk.Pulse.Contracts.csproj" />
     <ProjectReference Include="..\HoneyDrunk.Telemetry.Abstractions\HoneyDrunk.Telemetry.Abstractions.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.Loki\HoneyDrunk.Telemetry.Sink.Loki.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.Mimir\HoneyDrunk.Telemetry.Sink.Mimir.csproj" />
     <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.PostHog\HoneyDrunk.Telemetry.Sink.PostHog.csproj" />
     <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.Sentry\HoneyDrunk.Telemetry.Sink.Sentry.csproj" />
+    <ProjectReference Include="..\HoneyDrunk.Telemetry.Sink.Tempo\HoneyDrunk.Telemetry.Sink.Tempo.csproj" />
     <ProjectReference Include="..\Pulse.Collector\HoneyDrunk.Pulse.Collector.csproj" />
   </ItemGroup>
 

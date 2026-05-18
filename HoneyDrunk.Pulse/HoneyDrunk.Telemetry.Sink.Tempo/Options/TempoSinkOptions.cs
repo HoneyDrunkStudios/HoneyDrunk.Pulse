@@ -2,12 +2,14 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
+using HoneyDrunk.Telemetry.Sink.Shared;
+
 namespace HoneyDrunk.Telemetry.Sink.Tempo.Options;
 
 /// <summary>
 /// Configuration options for the Tempo trace sink.
 /// </summary>
-public sealed class TempoSinkOptions
+public sealed class TempoSinkOptions : IHttpOtlpSinkOptions
 {
     /// <summary>
     /// The configuration section name.

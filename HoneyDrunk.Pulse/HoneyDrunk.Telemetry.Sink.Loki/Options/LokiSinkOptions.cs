@@ -2,6 +2,7 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
+using HoneyDrunk.Telemetry.Sink.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace HoneyDrunk.Telemetry.Sink.Loki.Options;
@@ -9,7 +10,7 @@ namespace HoneyDrunk.Telemetry.Sink.Loki.Options;
 /// <summary>
 /// Configuration options for the Loki log sink.
 /// </summary>
-public sealed class LokiSinkOptions
+public sealed class LokiSinkOptions : IHttpOtlpSinkOptions
 {
     /// <summary>
     /// The configuration section name.

@@ -8,10 +8,10 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Telemetry.Sink.AzureMonitor</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Azure Monitor sink for HoneyDrunk telemetry. Exports traces, metrics, and logs to Application Insights using the Azure Monitor OpenTelemetry exporter.</Description>
-    <PackageReleaseNotes>v0.1.0: Initial release. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.3.0: Kernel adoption alignment and HTTP OTLP sink helper consolidation. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>telemetry;sink;azure-monitor;application-insights;azure;observability</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

@@ -8,10 +8,10 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Telemetry.Sink.Mimir</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Grafana Mimir metrics sink for HoneyDrunk telemetry. Forwards OTLP metrics data to Mimir for long-term metrics storage and querying.</Description>
-    <PackageReleaseNotes>v0.1.0: Initial release. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.3.0: Kernel adoption alignment and HTTP OTLP sink helper consolidation. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>telemetry;sink;mimir;grafana;metrics;observability</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -44,6 +44,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HoneyDrunk.Telemetry.Abstractions\HoneyDrunk.Telemetry.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\HoneyDrunk.Telemetry.Sink.Shared\HttpOtlpSinkExporter.cs" Link="Shared\HttpOtlpSinkExporter.cs" />
+    <Compile Include="..\HoneyDrunk.Telemetry.Sink.Shared\HttpOtlpSinkLogCallbacks.cs" Link="Shared\HttpOtlpSinkLogCallbacks.cs" />
+    <Compile Include="..\HoneyDrunk.Telemetry.Sink.Shared\IHttpOtlpSinkOptions.cs" Link="Shared\IHttpOtlpSinkOptions.cs" />
   </ItemGroup>
 
   <ItemGroup>

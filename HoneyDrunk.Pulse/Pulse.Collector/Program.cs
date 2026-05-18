@@ -2,6 +2,7 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
+using HoneyDrunk.Kernel.Abstractions;
 using HoneyDrunk.Kernel.Abstractions.Identity;
 using HoneyDrunk.Kernel.Hosting;
 using HoneyDrunk.Pulse.Collector.Configuration;
@@ -41,12 +42,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Configuration["HONEYDRUNK_NODE_ID"] ??= "pulse";
+        builder.Configuration["HONEYDRUNK_NODE_ID"] ??= WellKnownNodes.Ops.Pulse.Value;
         builder.Services.Replace(ServiceDescriptor.Singleton<IConfiguration>(builder.Configuration));
 
         builder.Services.AddHoneyDrunkNode(options =>
         {
-            options.NodeId = new NodeId("pulse");
+            options.NodeId = new NodeId(builder.Configuration["HONEYDRUNK_NODE_ID"] ?? WellKnownNodes.Ops.Pulse.Value);
             options.SectorId = SectorId.WellKnown.Ops;
             options.StudioId = "honeydrunk";
             options.EnvironmentId = new EnvironmentId(builder.Environment.EnvironmentName.ToLowerInvariant());

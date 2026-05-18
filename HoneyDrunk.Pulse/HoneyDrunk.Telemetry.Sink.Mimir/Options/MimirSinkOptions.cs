@@ -2,12 +2,14 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
+using HoneyDrunk.Telemetry.Sink.Shared;
+
 namespace HoneyDrunk.Telemetry.Sink.Mimir.Options;
 
 /// <summary>
 /// Configuration options for the Mimir metrics sink.
 /// </summary>
-public sealed class MimirSinkOptions
+public sealed class MimirSinkOptions : IHttpOtlpSinkOptions
 {
     /// <summary>
     /// The configuration section name.

@@ -16,14 +16,14 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="HoneyDrunk.Kernel" Version="0.4.0" />
+    <PackageReference Include="HoneyDrunk.Kernel" Version="0.7.0" />
     <PackageReference Include="HoneyDrunk.Standards" Version="0.2.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="HoneyDrunk.Transport" Version="0.4.0" />
-    <PackageReference Include="HoneyDrunk.Transport.AzureServiceBus" Version="0.4.0" />
-    <PackageReference Include="HoneyDrunk.Transport.InMemory" Version="0.4.0" />
+    <PackageReference Include="HoneyDrunk.Transport" Version="0.6.0" />
+    <PackageReference Include="HoneyDrunk.Transport.AzureServiceBus" Version="0.6.0" />
+    <PackageReference Include="HoneyDrunk.Transport.InMemory" Version="0.6.0" />
     <PackageReference Include="HoneyDrunk.Vault" Version="0.3.0" />
     <PackageReference Include="HoneyDrunk.Vault.EventGrid" Version="0.3.0" />
     <PackageReference Include="HoneyDrunk.Vault.Providers.AppConfiguration" Version="0.3.0" />
