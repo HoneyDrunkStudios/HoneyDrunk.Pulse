@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [HoneyDrunk.Telemetry.Sink.Sentry](HoneyDrunk.Telemetry.Sink.Sentry/CHANGELOG.md)
 - [HoneyDrunk.Telemetry.Sink.AzureMonitor](HoneyDrunk.Telemetry.Sink.AzureMonitor/CHANGELOG.md)
 
+## [Unreleased]
+
+### Internal
+
+- Seeded the Pulse coverage baseline and wired the push-to-main coverage baseline ratchet for the Grid PR coverage gate.
+
 ## [0.3.0] - 2026-05-18
 
 ### Changed
