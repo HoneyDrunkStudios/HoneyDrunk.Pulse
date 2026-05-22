@@ -23,7 +23,7 @@ conventions. Read it before implementing. This file only states agent-execution 
    cross-sink behavior goes in a shared location, not copied per sink. Prefer cohesive
    shared methods over one-off near-duplicates; justify intentional duplication in a
    comment. DRY/SOLID.
-5. Add or update tests in `Pulse.Tests` (xUnit + FluentAssertions) unless the issue says
+5. Add or update tests in `Pulse.Tests` (xUnit + AwesomeAssertions) unless the issue says
    otherwise.
 6. Run `dotnet build -c Release` and `dotnet test -c Release` locally. Analyzer compliance
    (`HoneyDrunk.Standards`) is mandatory; warnings are errors.

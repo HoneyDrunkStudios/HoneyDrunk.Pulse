@@ -2,7 +2,7 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
+using AwesomeAssertions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
 using HoneyDrunk.Telemetry.Sink.PostHog.Implementation;
 using HoneyDrunk.Telemetry.Sink.PostHog.Options;

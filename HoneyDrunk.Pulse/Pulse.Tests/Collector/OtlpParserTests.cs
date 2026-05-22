@@ -2,7 +2,7 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
+using AwesomeAssertions;
 using HoneyDrunk.Pulse.Collector.Ingestion;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Text;

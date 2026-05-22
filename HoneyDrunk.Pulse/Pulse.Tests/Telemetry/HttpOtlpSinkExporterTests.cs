@@ -2,7 +2,7 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
+using AwesomeAssertions;
 using HoneyDrunk.Telemetry.Sink.Loki.Implementation;
 using HoneyDrunk.Telemetry.Sink.Loki.Options;
 using HoneyDrunk.Telemetry.Sink.Mimir.Implementation;

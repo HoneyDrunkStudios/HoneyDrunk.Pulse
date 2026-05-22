@@ -109,7 +109,7 @@ dotnet test -c Release --no-build
 
 - Targets **.NET 10.0**. Warnings are errors.
 - Tests live only in `Pulse.Tests` — no test code in libraries or the Collector. Prefer
-  **xUnit** + **FluentAssertions**. Test classes mirror implementation.
+  **xUnit** + **AwesomeAssertions**. Test classes mirror implementation.
 - All code changes include tests unless the issue explicitly says otherwise.
 
 ---

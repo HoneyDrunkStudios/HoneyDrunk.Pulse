@@ -2,7 +2,7 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
+using AwesomeAssertions;
 using HoneyDrunk.Kernel.Abstractions;
 using HoneyDrunk.Kernel.Abstractions.Context;
 using Microsoft.Extensions.DependencyInjection;
