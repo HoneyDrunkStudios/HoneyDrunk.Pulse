@@ -2,7 +2,7 @@
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
 // </copyright>
 
-using FluentAssertions;
+using AwesomeAssertions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
 
 namespace HoneyDrunk.Pulse.Tests.Telemetry;

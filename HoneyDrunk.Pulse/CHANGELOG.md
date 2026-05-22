@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
+- Migrated Pulse tests to AwesomeAssertions, adopted HoneyDrunk.Standards.Tests 0.2.9, and refreshed HoneyDrunk.Standards to 0.2.9 across the solution for ADR-0047 testing alignment.
 - Seeded the Pulse coverage baseline and wired the push-to-main coverage baseline ratchet for the Grid PR coverage gate.
 
 ## [0.3.0] - 2026-05-18
