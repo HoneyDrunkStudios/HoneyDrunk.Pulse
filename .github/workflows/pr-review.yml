@@ -9,8 +9,13 @@ permissions:
   pull-requests: read
   issues: write
 
+concurrency:
+  group: grid-review-${{ github.repository }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   request-grid-review:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     # Secret-bearing workflow. This intentionally runs in pull_request_target
     # context and delegates to HoneyDrunk.Actions without checking out or
     # executing PR-head code before signing the OpenClaw webhook request.
