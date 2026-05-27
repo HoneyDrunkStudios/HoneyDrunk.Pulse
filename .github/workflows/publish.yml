@@ -76,10 +76,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Checkout Actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: HoneyDrunkStudios/HoneyDrunk.Actions
           ref: main
@@ -105,7 +105,7 @@ jobs:
           docs-url: 'https://github.com/HoneyDrunkStudios/HoneyDrunk.Pulse#readme'
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.prepare.outputs.version-tag }}
           name: HoneyDrunk.Pulse ${{ needs.prepare.outputs.version-tag }}
