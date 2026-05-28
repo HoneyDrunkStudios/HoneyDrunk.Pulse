@@ -33,11 +33,19 @@ namespace HoneyDrunk.Pulse.Collector.Ingestion;
 /// <param name="logger">The logger.</param>
 public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 {
+#pragma warning disable S3776 // OTLP protobuf/JSON parsers are inherently branchy (each method maps OTLP type -> internal shape, with optional fields and dual content-type paths). Method extraction would split each parser into many small fragments where the message-shape correspondence is harder to follow than the inline form. The existing private helpers (ResolveErrorLogs, TryExtractErrorSpanFromProto, etc.) already capture the natural seams; further decomposition is decorative.
+
     /// <summary>
     /// OTLP severity number threshold for error-level logs.
     /// OTLP: 17-20 = ERROR, 21-24 = FATAL.
     /// </summary>
     private const int ErrorSeverityThreshold = 17;
+
+    private const string AttributesKey = "attributes";
+    private const string ResourceLogsKey = "resourceLogs";
+    private const string ExceptionTypeKey = "exception.type";
+    private const string ExceptionMessageKey = "exception.message";
+    private const string ExceptionStacktraceKey = "exception.stacktrace";
 
     /// <summary>
     /// Parses an OTLP trace request from a stream.
@@ -296,7 +304,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 if (evt.TryGetProperty("name", out var eventName) &&
                     eventName.GetString()?.Equals("exception", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    if (evt.TryGetProperty("attributes", out var eventAttrs))
+                    if (evt.TryGetProperty(AttributesKey, out var eventAttrs))
                     {
                         foreach (var attr in eventAttrs.EnumerateArray())
                         {
@@ -305,13 +313,13 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
                             switch (key)
                             {
-                                case "exception.type":
+                                case ExceptionTypeKey:
                                     exceptionType = value;
                                     break;
-                                case "exception.message":
+                                case ExceptionMessageKey:
                                     exceptionMessage = value;
                                     break;
-                                case "exception.stacktrace":
+                                case ExceptionStacktraceKey:
                                     stackTrace = value;
                                     break;
                             }
@@ -337,7 +345,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
         // Extract additional attributes
         var attributes = new Dictionary<string, string>();
-        if (span.TryGetProperty("attributes", out var spanAttrs))
+        if (span.TryGetProperty(AttributesKey, out var spanAttrs))
         {
             foreach (var attr in spanAttrs.EnumerateArray())
             {
@@ -401,7 +409,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             return null;
         }
 
-        if (!resource.TryGetProperty("attributes", out var attributes))
+        if (!resource.TryGetProperty(AttributesKey, out var attributes))
         {
             return null;
         }
@@ -438,7 +446,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 continue;
             }
 
-            if (!resourceElement.TryGetProperty("attributes", out var attributes))
+            if (!resourceElement.TryGetProperty(AttributesKey, out var attributes))
             {
                 continue;
             }
@@ -487,12 +495,11 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             return null;
         }
 
-        foreach (var attr in resource.Attributes)
+        var serviceAttr = resource.Attributes
+            .FirstOrDefault(attr => attr.Key.Equals("service.name", StringComparison.OrdinalIgnoreCase));
+        if (serviceAttr != null)
         {
-            if (attr.Key.Equals("service.name", StringComparison.OrdinalIgnoreCase))
-            {
-                return attr.Value?.StringValue;
-            }
+            return serviceAttr.Value?.StringValue;
         }
 
         return null;
@@ -511,29 +518,27 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         string? exceptionMessage = null;
         string? stackTrace = null;
 
-        foreach (var evt in span.Events)
+        var exceptionEvent = span.Events
+            .FirstOrDefault(e => e.Name.Equals("exception", StringComparison.OrdinalIgnoreCase));
+        if (exceptionEvent != null)
         {
-            if (evt.Name.Equals("exception", StringComparison.OrdinalIgnoreCase))
+            foreach (var attr in exceptionEvent.Attributes)
             {
-                foreach (var attr in evt.Attributes)
+                switch (attr.Key)
                 {
-                    switch (attr.Key)
-                    {
-                        case "exception.type":
-                            exceptionType = GetProtoAttributeStringValue(attr.Value);
-                            break;
-                        case "exception.message":
-                            exceptionMessage = GetProtoAttributeStringValue(attr.Value);
-                            break;
-                        case "exception.stacktrace":
-                            stackTrace = GetProtoAttributeStringValue(attr.Value);
-                            break;
-                    }
+                    case ExceptionTypeKey:
+                        exceptionType = GetProtoAttributeStringValue(attr.Value);
+                        break;
+                    case ExceptionMessageKey:
+                        exceptionMessage = GetProtoAttributeStringValue(attr.Value);
+                        break;
+                    case ExceptionStacktraceKey:
+                        stackTrace = GetProtoAttributeStringValue(attr.Value);
+                        break;
                 }
-
-                hasErrorStatus = true;
-                break;
             }
+
+            hasErrorStatus = true;
         }
 
         if (!hasErrorStatus)
@@ -584,15 +589,15 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         {
             switch (attr.Key)
             {
-                case "exception.type":
+                case ExceptionTypeKey:
                     exceptionType = GetProtoAttributeStringValue(attr.Value);
                     isError = true; // Exception fields indicate an error
                     break;
-                case "exception.message":
+                case ExceptionMessageKey:
                     exceptionMessage = GetProtoAttributeStringValue(attr.Value);
                     isError = true;
                     break;
-                case "exception.stacktrace":
+                case ExceptionStacktraceKey:
                     stackTrace = GetProtoAttributeStringValue(attr.Value);
                     isError = true;
                     break;
@@ -672,7 +677,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         string? stackTrace = null;
         var attributes = new Dictionary<string, string>();
 
-        if (logRecord.TryGetProperty("attributes", out var attrs))
+        if (logRecord.TryGetProperty(AttributesKey, out var attrs))
         {
             foreach (var attr in attrs.EnumerateArray())
             {
@@ -688,15 +693,15 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
                 switch (key)
                 {
-                    case "exception.type":
+                    case ExceptionTypeKey:
                         exceptionType = value;
                         isError = true;
                         break;
-                    case "exception.message":
+                    case ExceptionMessageKey:
                         exceptionMessage = value;
                         isError = true;
                         break;
-                    case "exception.stacktrace":
+                    case ExceptionStacktraceKey:
                         stackTrace = value;
                         isError = true;
                         break;
@@ -929,7 +934,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             var logCount = 0;
 
             // Navigate: resourceLogs -> scopeLogs -> logRecords
-            if (root.TryGetProperty("resourceLogs", out var resourceLogs))
+            if (root.TryGetProperty(ResourceLogsKey, out var resourceLogs))
             {
                 foreach (var resourceLog in resourceLogs.EnumerateArray())
                 {
@@ -1016,7 +1021,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             // Try all three OTLP resource array types
             ExtractServiceNamesFromResourceArray(root, "resourceSpans", names);
             ExtractServiceNamesFromResourceArray(root, "resourceMetrics", names);
-            ExtractServiceNamesFromResourceArray(root, "resourceLogs", names);
+            ExtractServiceNamesFromResourceArray(root, ResourceLogsKey, names);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -1140,7 +1145,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             using var doc = JsonDocument.Parse(bytes);
             var root = doc.RootElement;
 
-            if (!root.TryGetProperty("resourceLogs", out var resourceLogs))
+            if (!root.TryGetProperty(ResourceLogsKey, out var resourceLogs))
             {
                 return errorLogs;
             }
@@ -1201,7 +1206,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             using var doc = JsonDocument.Parse(bytes);
             var root = doc.RootElement;
 
-            if (!root.TryGetProperty("resourceLogs", out var resourceLogs))
+            if (!root.TryGetProperty(ResourceLogsKey, out var resourceLogs))
             {
                 return maxSeverity;
             }
@@ -1310,3 +1315,4 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         return errorLogs;
     }
 }
+#pragma warning restore S3776

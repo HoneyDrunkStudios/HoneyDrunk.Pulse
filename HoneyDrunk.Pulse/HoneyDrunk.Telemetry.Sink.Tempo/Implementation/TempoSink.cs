@@ -47,9 +47,10 @@ public sealed partial class TempoSink(
                 _options.TimeoutSeconds,
                 _options.MaxRetries,
                 _options.Headers,
-                _options.BasicAuthSecretName,
-                _options.UsernameSecretName,
-                _options.PasswordSecretName),
+                new HttpOtlpSinkAuthSecretNames(
+                    _options.BasicAuthSecretName,
+                    _options.UsernameSecretName,
+                    _options.PasswordSecretName)),
             traceData,
             contentType,
             new HttpOtlpSinkLogCallbacks(

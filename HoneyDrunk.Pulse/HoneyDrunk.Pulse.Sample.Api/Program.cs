@@ -96,4 +96,4 @@ app.MapPost("/analytics/feature-used", async (FeatureUsedRequest request, IAnaly
 // Health endpoint
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
 
-app.Run();
+await app.RunAsync();

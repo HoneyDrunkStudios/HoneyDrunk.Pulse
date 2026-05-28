@@ -37,6 +37,23 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Adds the Azure Monitor sink to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">An action to configure the options.</param>
+    /// <param name="connectionString">The Azure Monitor connection string.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAzureMonitorSink(
+        this IServiceCollection services,
+        Action<AzureMonitorSinkOptions> configureOptions,
+        string? connectionString = null)
+    {
+        services.Configure(configureOptions);
+
+        return services.AddAzureMonitorSinkCore(connectionString);
+    }
+
+    /// <summary>
     /// Adds the Azure Monitor sink to the service collection with a connection string.
     /// </summary>
     /// <param name="services">The service collection.</param>
@@ -50,23 +67,6 @@ public static class ServiceCollectionExtensions
     {
         services.Configure<AzureMonitorSinkOptions>(
             configuration.GetSection(AzureMonitorSinkOptions.SectionName));
-
-        return services.AddAzureMonitorSinkCore(connectionString);
-    }
-
-    /// <summary>
-    /// Adds the Azure Monitor sink to the service collection.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <param name="configureOptions">An action to configure the options.</param>
-    /// <param name="connectionString">The Azure Monitor connection string.</param>
-    /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddAzureMonitorSink(
-        this IServiceCollection services,
-        Action<AzureMonitorSinkOptions> configureOptions,
-        string? connectionString = null)
-    {
-        services.Configure(configureOptions);
 
         return services.AddAzureMonitorSinkCore(connectionString);
     }

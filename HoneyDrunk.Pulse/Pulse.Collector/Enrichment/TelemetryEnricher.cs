@@ -41,6 +41,10 @@ public sealed partial class TelemetryEnricher(
     IOptions<PulseCollectorOptions> options,
     ILogger<TelemetryEnricher> logger)
 {
+#pragma warning disable SA1202 // Helpers placed next to their callers for readability rather than strict access-level grouping.
+
+    private const string IngestedAtKey = "pulse.ingested_at";
+
     private readonly PulseCollectorOptions _options = options.Value;
 
     /// <summary>
@@ -160,51 +164,56 @@ public sealed partial class TelemetryEnricher(
     /// <param name="sourceName">The source service name.</param>
     public void EnrichErrorEvent(ErrorEvent errorEvent, string? sourceName)
     {
-        // Add source service tag if available
         if (!string.IsNullOrEmpty(sourceName) && !errorEvent.Tags.ContainsKey(TelemetryTagKeys.Semantic.ServiceName))
         {
             errorEvent.Tags[TelemetryTagKeys.Semantic.ServiceName] = sourceName;
         }
 
-        // Add environment
         if (!string.IsNullOrEmpty(_options.Environment) && string.IsNullOrEmpty(errorEvent.Environment))
         {
             errorEvent.Environment = _options.Environment;
         }
 
-        // Add HoneyDrunk context from operation context
-        var operationContext = operationContextAccessor?.Current;
-        if (operationContext != null)
+        MergeOperationContextIntoErrorEvent(errorEvent);
+
+        if (!errorEvent.Extra.ContainsKey(IngestedAtKey))
         {
-            if (string.IsNullOrEmpty(errorEvent.CorrelationId))
-            {
-                errorEvent.CorrelationId = operationContext.CorrelationId;
-            }
+            errorEvent.Extra[IngestedAtKey] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+    }
 
-            if (string.IsNullOrEmpty(errorEvent.OperationId))
-            {
-                errorEvent.OperationId = operationContext.OperationId;
-            }
-
-            if (operationContext.GridContext != null)
-            {
-                if (string.IsNullOrEmpty(errorEvent.NodeId))
-                {
-                    errorEvent.NodeId = operationContext.GridContext.NodeId;
-                }
-
-                if (!errorEvent.Tags.ContainsKey(TelemetryTagKeys.HoneyDrunk.TenantId) &&
-                    !string.IsNullOrEmpty(operationContext.GridContext.TenantId))
-                {
-                    errorEvent.Tags[TelemetryTagKeys.HoneyDrunk.TenantId] = operationContext.GridContext.TenantId;
-                }
-            }
+    private void MergeOperationContextIntoErrorEvent(ErrorEvent errorEvent)
+    {
+        var operationContext = operationContextAccessor?.Current;
+        if (operationContext is null)
+        {
+            return;
         }
 
-        // Add ingestion timestamp
-        if (!errorEvent.Extra.ContainsKey("pulse.ingested_at"))
+        if (string.IsNullOrEmpty(errorEvent.CorrelationId))
         {
-            errorEvent.Extra["pulse.ingested_at"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            errorEvent.CorrelationId = operationContext.CorrelationId;
+        }
+
+        if (string.IsNullOrEmpty(errorEvent.OperationId))
+        {
+            errorEvent.OperationId = operationContext.OperationId;
+        }
+
+        var grid = operationContext.GridContext;
+        if (grid is null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(errorEvent.NodeId))
+        {
+            errorEvent.NodeId = grid.NodeId;
+        }
+
+        if (!errorEvent.Tags.ContainsKey(TelemetryTagKeys.HoneyDrunk.TenantId) && !string.IsNullOrEmpty(grid.TenantId))
+        {
+            errorEvent.Tags[TelemetryTagKeys.HoneyDrunk.TenantId] = grid.TenantId;
         }
     }
 
@@ -215,50 +224,56 @@ public sealed partial class TelemetryEnricher(
     /// <param name="sourceName">The source service name.</param>
     public void EnrichTelemetryEvent(TelemetryEvent telemetryEvent, string? sourceName)
     {
-        // Add source service if not present
         if (!string.IsNullOrEmpty(sourceName) && string.IsNullOrEmpty(telemetryEvent.NodeName))
         {
             telemetryEvent.NodeName = sourceName;
         }
 
-        // Add environment
         if (!string.IsNullOrEmpty(_options.Environment) && string.IsNullOrEmpty(telemetryEvent.Environment))
         {
             telemetryEvent.Environment = _options.Environment;
         }
 
-        // Add HoneyDrunk context from operation context
-        var operationContext = operationContextAccessor?.Current;
-        if (operationContext != null)
+        MergeOperationContextIntoTelemetryEvent(telemetryEvent);
+
+        if (!telemetryEvent.Properties.ContainsKey(IngestedAtKey))
         {
-            if (string.IsNullOrEmpty(telemetryEvent.CorrelationId))
-            {
-                telemetryEvent.CorrelationId = operationContext.CorrelationId;
-            }
+            telemetryEvent.Properties[IngestedAtKey] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        }
+    }
 
-            if (string.IsNullOrEmpty(telemetryEvent.OperationId))
-            {
-                telemetryEvent.OperationId = operationContext.OperationId;
-            }
-
-            if (operationContext.GridContext != null)
-            {
-                if (string.IsNullOrEmpty(telemetryEvent.NodeId))
-                {
-                    telemetryEvent.NodeId = operationContext.GridContext.NodeId;
-                }
-
-                if (string.IsNullOrEmpty(telemetryEvent.TenantId))
-                {
-                    telemetryEvent.TenantId = operationContext.GridContext.TenantId;
-                }
-            }
+    private void MergeOperationContextIntoTelemetryEvent(TelemetryEvent telemetryEvent)
+    {
+        var operationContext = operationContextAccessor?.Current;
+        if (operationContext is null)
+        {
+            return;
         }
 
-        // Add ingestion timestamp to properties
-        if (!telemetryEvent.Properties.ContainsKey("pulse.ingested_at"))
+        if (string.IsNullOrEmpty(telemetryEvent.CorrelationId))
         {
-            telemetryEvent.Properties["pulse.ingested_at"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            telemetryEvent.CorrelationId = operationContext.CorrelationId;
+        }
+
+        if (string.IsNullOrEmpty(telemetryEvent.OperationId))
+        {
+            telemetryEvent.OperationId = operationContext.OperationId;
+        }
+
+        var grid = operationContext.GridContext;
+        if (grid is null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(telemetryEvent.NodeId))
+        {
+            telemetryEvent.NodeId = grid.NodeId;
+        }
+
+        if (string.IsNullOrEmpty(telemetryEvent.TenantId))
+        {
+            telemetryEvent.TenantId = grid.TenantId;
         }
     }
 
@@ -308,7 +323,7 @@ public sealed partial class TelemetryEnricher(
             }
         }
 
-        metadata["pulse.ingested_at"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
+        metadata[IngestedAtKey] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
 
         return metadata;
     }
@@ -381,9 +396,9 @@ public sealed partial class TelemetryEnricher(
     private void EnrichWithCollectorMetadata(Dictionary<string, object> attributes)
     {
         // Add ingestion timestamp
-        if (!attributes.ContainsKey("pulse.ingested_at"))
+        if (!attributes.ContainsKey(IngestedAtKey))
         {
-            attributes["pulse.ingested_at"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            attributes[IngestedAtKey] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
         // Add collector environment
@@ -394,3 +409,4 @@ public sealed partial class TelemetryEnricher(
         }
     }
 }
+#pragma warning restore SA1202

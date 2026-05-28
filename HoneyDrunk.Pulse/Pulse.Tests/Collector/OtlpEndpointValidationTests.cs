@@ -213,4 +213,97 @@ public class OtlpEndpointValidationTests
             .WithMessage("*FAIL-FAST*")
             .WithMessage("*localhost*");
     }
+
+    /// <summary>
+    /// Self-reference check is a no-op when no endpoint is configured.
+    /// </summary>
+    [Fact]
+    public void ValidateOtlpEndpointNotSelfReferencing_NullOrEmptyEndpoint_ReturnsAppUnchanged()
+    {
+        var builder = WebApplication.CreateBuilder(["--environment", "Development"]);
+        var app = builder.Build();
+
+        var result1 = app.ValidateOtlpEndpointNotSelfReferencing(null);
+        var result2 = app.ValidateOtlpEndpointNotSelfReferencing(string.Empty);
+
+        result1.Should().BeSameAs(app);
+        result2.Should().BeSameAs(app);
+    }
+
+    /// <summary>
+    /// Invalid (non-absolute) URI is logged and skipped, not thrown.
+    /// </summary>
+    [Fact]
+    public void ValidateOtlpEndpointNotSelfReferencing_InvalidUri_ReturnsAppUnchanged()
+    {
+        var builder = WebApplication.CreateBuilder(["--environment", "Development"]);
+        var app = builder.Build();
+
+        var result = app.ValidateOtlpEndpointNotSelfReferencing("not-a-valid-uri");
+
+        result.Should().BeSameAs(app);
+    }
+
+    /// <summary>
+    /// Remote endpoint pointing somewhere other than the collector returns unchanged.
+    /// </summary>
+    [Fact]
+    public void ValidateOtlpEndpointNotSelfReferencing_RemoteEndpoint_ReturnsAppUnchanged()
+    {
+        var builder = WebApplication.CreateBuilder(["--environment", "Production"]);
+        var app = builder.Build();
+
+        var result = app.ValidateOtlpEndpointNotSelfReferencing("https://otel-collector.example.com:4317");
+
+        result.Should().BeSameAs(app);
+    }
+
+    /// <summary>
+    /// Endpoint pointing to one of the app's own listening URLs throws fail-fast.
+    /// </summary>
+    [Fact]
+    public void ValidateOtlpEndpointNotSelfReferencing_SameHostSamePort_ThrowsInvalidOperationException()
+    {
+        var builder = WebApplication.CreateBuilder(["--environment", "Production"]);
+        var app = builder.Build();
+        app.Urls.Add("http://localhost:5000");
+
+        var act = () => app.ValidateOtlpEndpointNotSelfReferencing("http://localhost:5000");
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*FAIL-FAST*")
+            .WithMessage("*infinite loop*");
+    }
+
+    /// <summary>
+    /// Endpoint pointing to a localhost variant of the listening URL on the same port is still self-referencing.
+    /// </summary>
+    [Fact]
+    public void ValidateOtlpEndpointNotSelfReferencing_DifferentLocalhostVariantSamePort_ThrowsInvalidOperationException()
+    {
+        var builder = WebApplication.CreateBuilder(["--environment", "Production"]);
+        var app = builder.Build();
+        app.Urls.Add("http://127.0.0.1:5000");
+
+        var act = () => app.ValidateOtlpEndpointNotSelfReferencing("http://localhost:5000");
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*FAIL-FAST*")
+            .WithMessage("*infinite loop*");
+    }
+
+    /// <summary>
+    /// Same host but different port is NOT self-referencing.
+    /// </summary>
+    [Fact]
+    public void ValidateOtlpEndpointNotSelfReferencing_SameHostDifferentPort_ReturnsAppUnchanged()
+    {
+        var builder = WebApplication.CreateBuilder(["--environment", "Production"]);
+        var app = builder.Build();
+        app.Urls.Add("http://localhost:5000");
+
+        var result = app.ValidateOtlpEndpointNotSelfReferencing("http://localhost:4317");
+
+        result.Should().BeSameAs(app);
+    }
 }

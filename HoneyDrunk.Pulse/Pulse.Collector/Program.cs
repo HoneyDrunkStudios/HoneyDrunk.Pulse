@@ -33,6 +33,12 @@ namespace HoneyDrunk.Pulse.Collector;
 /// </summary>
 public class Program
 {
+    // Sonar S1118: keep Program non-static (used as the logger category type via ILogger&lt;Program&gt;)
+    // but prevent instantiation by hiding the default constructor.
+    private Program()
+    {
+    }
+
     /// <summary>
     /// Main entry point.
     /// </summary>
