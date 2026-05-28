@@ -11,7 +11,7 @@
     <Version>0.4.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Pure abstractions for HoneyDrunk telemetry sinks and instrumentation. Defines ITraceSink, ILogSink, IMetricsSink, IAnalyticsSink, IErrorSink, and telemetry event models.</Description>
-    <PackageReleaseNotes>v0.3.0: Kernel adoption alignment and HTTP OTLP sink helper consolidation. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.4.0: ADR-0011 D11 Sonar/SAST cleanup + dependency train refresh. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>telemetry;abstractions;sinks;traces;logs;metrics;analytics;errors;observability</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

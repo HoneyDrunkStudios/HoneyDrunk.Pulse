@@ -22,7 +22,7 @@
     <Version>0.4.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>OpenTelemetry integration for HoneyDrunk Grid Nodes. Provides preconfigured tracing, metrics, and logging pipelines with OTLP export and Grid context enrichment.</Description>
-    <PackageReleaseNotes>v0.3.0: Kernel adoption alignment and HTTP OTLP sink helper consolidation. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.4.0: ADR-0011 D11 Sonar/SAST cleanup + dependency train refresh. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>telemetry;opentelemetry;otel;tracing;metrics;logging;observability;instrumentation</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

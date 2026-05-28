@@ -11,7 +11,7 @@
     <Version>0.4.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>PostHog analytics sink for HoneyDrunk telemetry. Captures product analytics events with batching, retry logic, and rate-limit handling.</Description>
-    <PackageReleaseNotes>v0.3.0: Kernel adoption alignment and HTTP OTLP sink helper consolidation. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.4.0: ADR-0011 D11 Sonar/SAST cleanup + dependency train refresh. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>telemetry;sink;posthog;analytics;product-analytics;events;batching</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

@@ -36,12 +36,13 @@ namespace HoneyDrunk.Pulse.Collector.Enrichment;
 /// <param name="operationContextAccessor">The operation context accessor (optional).</param>
 /// <param name="options">The collector options.</param>
 /// <param name="logger">The logger.</param>
-#pragma warning disable SA1202 // Helpers placed next to their callers for readability rather than strict access-level grouping.
 public sealed partial class TelemetryEnricher(
     IOperationContextAccessor? operationContextAccessor,
     IOptions<PulseCollectorOptions> options,
     ILogger<TelemetryEnricher> logger)
 {
+#pragma warning disable SA1202 // Helpers placed next to their callers for readability rather than strict access-level grouping.
+
     private const string IngestedAtKey = "pulse.ingested_at";
 
     private readonly PulseCollectorOptions _options = options.Value;

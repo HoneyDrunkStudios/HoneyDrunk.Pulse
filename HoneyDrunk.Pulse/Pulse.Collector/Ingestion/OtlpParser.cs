@@ -31,9 +31,10 @@ namespace HoneyDrunk.Pulse.Collector.Ingestion;
 /// Initializes a new instance of the <see cref="OtlpParser"/> class.
 /// </remarks>
 /// <param name="logger">The logger.</param>
-#pragma warning disable S3776 // OTLP protobuf/JSON parsers are inherently branchy (each method maps OTLP type → internal shape, with optional fields and dual content-type paths). Method extraction would split each parser into many small fragments where the message-shape correspondence is harder to follow than the inline form. The existing private helpers (ResolveErrorLogs, TryExtractErrorSpanFromProto, etc.) already capture the natural seams; further decomposition is decorative.
 public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 {
+#pragma warning disable S3776 // OTLP protobuf/JSON parsers are inherently branchy (each method maps OTLP type -> internal shape, with optional fields and dual content-type paths). Method extraction would split each parser into many small fragments where the message-shape correspondence is harder to follow than the inline form. The existing private helpers (ResolveErrorLogs, TryExtractErrorSpanFromProto, etc.) already capture the natural seams; further decomposition is decorative.
+
     /// <summary>
     /// OTLP severity number threshold for error-level logs.
     /// OTLP: 17-20 = ERROR, 21-24 = FATAL.

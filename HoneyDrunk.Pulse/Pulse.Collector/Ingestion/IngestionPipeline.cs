@@ -33,8 +33,6 @@ namespace HoneyDrunk.Pulse.Collector.Ingestion;
 /// <param name="options">The collector options.</param>
 /// <param name="lokiOptions">The Loki sink options for log level filtering.</param>
 /// <param name="logger">The logger.</param>
-#pragma warning disable S107 // Pipeline ctor + Process*Async methods compose 8-10 DI services / per-batch attribution fields by design; bundling into a request record would obscure the per-channel routing rather than clarify it.
-#pragma warning disable S3776 // Pipeline orchestration paths fan out across optional sinks + per-channel error handling; method extraction would not improve clarity over inline ordering. Helpers already exist (ExportToTraceSinksAsync, PublishIngestionEventAsync, ForwardErrorSpansToSentryAsync) and the remaining branches map 1:1 to telemetry channels.
 public sealed partial class IngestionPipeline(
     TelemetryEnricher enricher,
     IAnalyticsSink? analyticsSink,
@@ -47,6 +45,8 @@ public sealed partial class IngestionPipeline(
     IOptions<LokiSinkOptions>? lokiOptions,
     ILogger<IngestionPipeline> logger)
 {
+#pragma warning disable S107 // Ctor composes 10 DI-injected services + Process*Async methods carry 8-10 per-batch attribution fields by design; bundling into a request record would obscure per-channel routing.
+#pragma warning disable S3776 // Pipeline orchestration paths fan out across optional sinks + per-channel error handling; method extraction would not improve clarity over inline ordering. Existing private helpers (ExportToTraceSinksAsync, PublishIngestionEventAsync, ForwardErrorSpansToSentryAsync) already capture the natural seams.
     private const string UnknownSource = "unknown";
 
     /// <summary>
@@ -513,9 +513,14 @@ public sealed partial class IngestionPipeline(
                 // Apply minimum log level filtering for Loki
                 if (ShouldFilterLogSink(sink, maxSeverityNumber))
                 {
-                    // CA1848/S6664: enum.ToString() is cheap; the source-generated partial
-                    // gates the message formatting internally via IsEnabled.
-                    LogLogsBatchFilteredByLevel(maxSeverityNumber, _lokiOptions!.MinimumLogLevel.ToString());
+                    // Gate the .ToString() allocation on IsEnabled — the LoggerMessage source-gen
+                    // gates message formatting internally, but the argument is evaluated before the
+                    // call. Without this guard a filtered batch still allocates a string per sink.
+                    if (logger.IsEnabled(LogLevel.Debug))
+                    {
+                        LogLogsBatchFilteredByLevel(maxSeverityNumber, _lokiOptions!.MinimumLogLevel.ToString());
+                    }
+
                     continue;
                 }
 

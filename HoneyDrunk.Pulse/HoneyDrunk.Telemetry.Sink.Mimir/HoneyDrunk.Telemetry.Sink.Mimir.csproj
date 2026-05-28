@@ -11,7 +11,7 @@
     <Version>0.4.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Grafana Mimir metrics sink for HoneyDrunk telemetry. Forwards OTLP metrics data to Mimir for long-term metrics storage and querying.</Description>
-    <PackageReleaseNotes>v0.3.0: Kernel adoption alignment and HTTP OTLP sink helper consolidation. See CHANGELOG.md for details.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.4.0: ADR-0011 D11 Sonar/SAST cleanup + dependency train refresh. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>telemetry;sink;mimir;grafana;metrics;observability</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
