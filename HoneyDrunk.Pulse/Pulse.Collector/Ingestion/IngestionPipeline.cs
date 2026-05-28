@@ -33,6 +33,8 @@ namespace HoneyDrunk.Pulse.Collector.Ingestion;
 /// <param name="options">The collector options.</param>
 /// <param name="lokiOptions">The Loki sink options for log level filtering.</param>
 /// <param name="logger">The logger.</param>
+#pragma warning disable S107 // Pipeline ctor + Process*Async methods compose 8-10 DI services / per-batch attribution fields by design; bundling into a request record would obscure the per-channel routing rather than clarify it.
+#pragma warning disable S3776 // Pipeline orchestration paths fan out across optional sinks + per-channel error handling; method extraction would not improve clarity over inline ordering. Helpers already exist (ExportToTraceSinksAsync, PublishIngestionEventAsync, ForwardErrorSpansToSentryAsync) and the remaining branches map 1:1 to telemetry channels.
 public sealed partial class IngestionPipeline(
     TelemetryEnricher enricher,
     IAnalyticsSink? analyticsSink,
@@ -45,6 +47,8 @@ public sealed partial class IngestionPipeline(
     IOptions<LokiSinkOptions>? lokiOptions,
     ILogger<IngestionPipeline> logger)
 {
+    private const string UnknownSource = "unknown";
+
     /// <summary>
     /// OTLP severity number threshold mapping for Microsoft.Extensions.Logging.LogLevel.
     /// </summary>
@@ -111,7 +115,7 @@ public sealed partial class IngestionPipeline(
                     cancellationToken).ConfigureAwait(false);
             }
 
-            LogTracesProcessed(traceCount, errorSpans?.Count ?? 0, sourceName ?? "unknown");
+            LogTracesProcessed(traceCount, errorSpans?.Count ?? 0, sourceName ?? UnknownSource);
 
             var status = sinkFailures > 0
                 ? Contracts.Events.IngestionStatus.PartialSuccess
@@ -180,7 +184,7 @@ public sealed partial class IngestionPipeline(
                     cancellationToken).ConfigureAwait(false);
             }
 
-            LogMetricsProcessed(metricCount, sourceName ?? "unknown");
+            LogMetricsProcessed(metricCount, sourceName ?? UnknownSource);
 
             var status = sinkFailures > 0
                 ? Contracts.Events.IngestionStatus.PartialSuccess
@@ -260,7 +264,7 @@ public sealed partial class IngestionPipeline(
                     cancellationToken).ConfigureAwait(false);
             }
 
-            LogLogsProcessedWithErrors(logCount, errorLogs?.Count ?? 0, sourceName ?? "unknown");
+            LogLogsProcessedWithErrors(logCount, errorLogs?.Count ?? 0, sourceName ?? UnknownSource);
 
             var status = sinkFailures > 0
                 ? Contracts.Events.IngestionStatus.PartialSuccess
@@ -343,7 +347,7 @@ public sealed partial class IngestionPipeline(
             tenantId ??= ResolveBatchTenantForMetrics(eventList);
             CollectorTelemetry.RecordAnalyticsEventsIngested(eventList.Count, sourceName, tenantId);
 
-            LogAnalyticsEventsProcessed(eventList.Count, sourceName ?? "unknown");
+            LogAnalyticsEventsProcessed(eventList.Count, sourceName ?? UnknownSource);
 
             var status = sinkFailures > 0
                 ? Contracts.Events.IngestionStatus.PartialSuccess
@@ -509,11 +513,9 @@ public sealed partial class IngestionPipeline(
                 // Apply minimum log level filtering for Loki
                 if (ShouldFilterLogSink(sink, maxSeverityNumber))
                 {
-                    if (logger.IsEnabled(LogLevel.Debug))
-                    {
-                        LogLogsBatchFilteredByLevel(maxSeverityNumber, _lokiOptions!.MinimumLogLevel.ToString());
-                    }
-
+                    // CA1848/S6664: enum.ToString() is cheap; the source-generated partial
+                    // gates the message formatting internally via IsEnabled.
+                    LogLogsBatchFilteredByLevel(maxSeverityNumber, _lokiOptions!.MinimumLogLevel.ToString());
                     continue;
                 }
 
@@ -676,7 +678,7 @@ public sealed partial class IngestionPipeline(
 
                 CollectorTelemetry.RecordErrorForwarded(errorSpan.ServiceName, tenantId);
 
-                LogErrorSpanForwarded(errorSpan.SpanName, errorSpan.ServiceName ?? "unknown");
+                LogErrorSpanForwarded(errorSpan.SpanName, errorSpan.ServiceName ?? UnknownSource);
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
@@ -762,7 +764,7 @@ public sealed partial class IngestionPipeline(
 
                 CollectorTelemetry.RecordErrorForwarded(sourceName ?? errorLog.ServiceName, tenantId);
 
-                LogErrorLogForwarded(errorLog.SeverityText ?? "ERROR", sourceName ?? errorLog.ServiceName ?? "unknown");
+                LogErrorLogForwarded(errorLog.SeverityText ?? "ERROR", sourceName ?? errorLog.ServiceName ?? UnknownSource);
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
@@ -771,3 +773,5 @@ public sealed partial class IngestionPipeline(
         }
     }
 }
+#pragma warning restore S3776
+#pragma warning restore S107

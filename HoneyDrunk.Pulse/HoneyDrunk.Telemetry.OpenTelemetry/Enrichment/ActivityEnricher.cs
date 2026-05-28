@@ -57,6 +57,30 @@ public static class ActivityEnricher
     }
 
     /// <summary>
+    /// Enriches an activity with tenant and grid information.
+    /// </summary>
+    /// <param name="activity">The activity to enrich.</param>
+    /// <param name="gridId">The grid ID.</param>
+    /// <param name="tenantId">The tenant ID.</param>
+    public static void EnrichWithGridContext(Activity? activity, string? gridId, string? tenantId)
+    {
+        if (activity is null)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(gridId))
+        {
+            activity.SetTag(TelemetryTagKeys.HoneyDrunk.GridId, gridId);
+        }
+
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            activity.SetTag(TelemetryTagKeys.HoneyDrunk.TenantId, tenantId);
+        }
+    }
+
+    /// <summary>
     /// Enriches an activity with node identity information.
     /// </summary>
     /// <param name="activity">The activity to enrich.</param>
@@ -83,30 +107,6 @@ public static class ActivityEnricher
         if (!string.IsNullOrEmpty(nodeType))
         {
             activity.SetTag(TelemetryTagKeys.HoneyDrunk.NodeType, nodeType);
-        }
-    }
-
-    /// <summary>
-    /// Enriches an activity with tenant and grid information.
-    /// </summary>
-    /// <param name="activity">The activity to enrich.</param>
-    /// <param name="gridId">The grid ID.</param>
-    /// <param name="tenantId">The tenant ID.</param>
-    public static void EnrichWithGridContext(Activity? activity, string? gridId, string? tenantId)
-    {
-        if (activity is null)
-        {
-            return;
-        }
-
-        if (!string.IsNullOrEmpty(gridId))
-        {
-            activity.SetTag(TelemetryTagKeys.HoneyDrunk.GridId, gridId);
-        }
-
-        if (!string.IsNullOrEmpty(tenantId))
-        {
-            activity.SetTag(TelemetryTagKeys.HoneyDrunk.TenantId, tenantId);
         }
     }
 

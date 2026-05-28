@@ -15,7 +15,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="HoneyDrunk.Standards.Tests" Version="0.2.9" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.8" />
   </ItemGroup>
 
   <ItemGroup>

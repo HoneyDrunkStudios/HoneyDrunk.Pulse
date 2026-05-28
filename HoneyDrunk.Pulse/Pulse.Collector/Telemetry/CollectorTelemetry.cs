@@ -12,7 +12,7 @@ namespace HoneyDrunk.Pulse.Collector.Telemetry;
 /// <summary>
 /// Telemetry instrumentation for the Pulse Collector.
 /// </summary>
-public sealed class CollectorTelemetry
+public static class CollectorTelemetry
 {
     /// <summary>
     /// The name of the activity source.

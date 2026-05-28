@@ -111,44 +111,7 @@ public static class OtlpEndpointValidationExtensions
             return app;
         }
 
-        // Check if pointing to localhost on collector ports
-        var isLocalhost = LocalhostAddresses.Contains(otlpUri.Host, StringComparer.OrdinalIgnoreCase);
-        var isCollectorPort = CollectorPorts.Contains(otlpUri.Port);
-
-        // Get the URLs this application is listening on
-        var urls = app.Urls.ToList();
-        if (urls.Count == 0)
-        {
-            // Default URLs if not explicitly configured
-            urls.Add("http://localhost:5000");
-            urls.Add("https://localhost:5001");
-        }
-
-        var isSelfReferencing = false;
-        foreach (var url in urls)
-        {
-            if (Uri.TryCreate(url, UriKind.Absolute, out var listenUri))
-            {
-                // Check if the OTLP endpoint points to the same host:port as any listening address
-                if (string.Equals(otlpUri.Host, listenUri.Host, StringComparison.OrdinalIgnoreCase) &&
-                    otlpUri.Port == listenUri.Port)
-                {
-                    isSelfReferencing = true;
-                    break;
-                }
-
-                // Check if both are localhost variants on the same port
-                var otlpIsLocalhost = LocalhostAddresses.Contains(otlpUri.Host, StringComparer.OrdinalIgnoreCase);
-                var listenIsLocalhost = LocalhostAddresses.Contains(listenUri.Host, StringComparer.OrdinalIgnoreCase);
-                if (otlpIsLocalhost && listenIsLocalhost && otlpUri.Port == listenUri.Port)
-                {
-                    isSelfReferencing = true;
-                    break;
-                }
-            }
-        }
-
-        if (isSelfReferencing)
+        if (IsSelfReferencing(otlpUri, app.Urls))
         {
             var errorMessage = $"OTLP endpoint '{otlpEndpoint}' points to this collector, which would create an infinite loop. " +
                                $"Configure '{OtlpEndpointConfigKey}' to point to a different collector or remove it to disable OTLP export.";
@@ -163,6 +126,8 @@ public static class OtlpEndpointValidationExtensions
         }
 
         // Warn if pointing to localhost on a typical collector port (might be intentional in Development)
+        var isLocalhost = LocalhostAddresses.Contains(otlpUri.Host, StringComparer.OrdinalIgnoreCase);
+        var isCollectorPort = CollectorPorts.Contains(otlpUri.Port);
         if (isLocalhost && isCollectorPort && !app.Environment.IsDevelopment())
         {
             // This should not happen after GetValidatedOtlpEndpoint, but kept as defense-in-depth
@@ -174,5 +139,35 @@ public static class OtlpEndpointValidationExtensions
         }
 
         return app;
+    }
+
+    private static bool IsSelfReferencing(Uri otlpUri, IEnumerable<string> listeningUrls)
+    {
+        var urls = listeningUrls.ToList();
+        if (urls.Count == 0)
+        {
+            urls.Add("http://localhost:5000");
+            urls.Add("https://localhost:5001");
+        }
+
+        return urls.Any(url => Uri.TryCreate(url, UriKind.Absolute, out var listenUri)
+            && PointsToSameEndpoint(otlpUri, listenUri));
+    }
+
+    private static bool PointsToSameEndpoint(Uri otlpUri, Uri listenUri)
+    {
+        if (otlpUri.Port != listenUri.Port)
+        {
+            return false;
+        }
+
+        if (string.Equals(otlpUri.Host, listenUri.Host, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Both ends being any localhost variant on the same port is also self-referencing.
+        return LocalhostAddresses.Contains(otlpUri.Host, StringComparer.OrdinalIgnoreCase)
+            && LocalhostAddresses.Contains(listenUri.Host, StringComparer.OrdinalIgnoreCase);
     }
 }

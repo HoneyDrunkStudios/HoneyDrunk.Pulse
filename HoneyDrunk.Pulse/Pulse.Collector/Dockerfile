@@ -26,13 +26,16 @@ COPY ["HoneyDrunk.Telemetry.Sink.Sentry/HoneyDrunk.Telemetry.Sink.Sentry.csproj"
 COPY ["HoneyDrunk.Telemetry.Sink.Tempo/HoneyDrunk.Telemetry.Sink.Tempo.csproj", "HoneyDrunk.Telemetry.Sink.Tempo/"]
 RUN dotnet restore "Pulse.Collector/HoneyDrunk.Pulse.Collector.csproj"
 
+# Recursive copy is bounded by .dockerignore at the build-context root, which
+# excludes bin/, obj/, TestResults/, .git/, .vs/, .env*, secrets.json,
+# appsettings.Development.json, *.pfx, *.snk, and test projects (Sonar S6470).
 COPY . .
 WORKDIR "/src/Pulse.Collector"
-RUN dotnet build "HoneyDrunk.Pulse.Collector.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "HoneyDrunk.Pulse.Collector.csproj" -c "$BUILD_CONFIGURATION" -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "HoneyDrunk.Pulse.Collector.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "HoneyDrunk.Pulse.Collector.csproj" -c "$BUILD_CONFIGURATION" -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

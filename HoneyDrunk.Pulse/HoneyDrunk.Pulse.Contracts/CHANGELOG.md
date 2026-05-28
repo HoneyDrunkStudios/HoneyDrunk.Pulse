@@ -5,6 +5,12 @@ All notable changes to HoneyDrunk.Pulse.Contracts will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-28
+
+### Internal
+
+- Package version aligned to `0.4.0` for the Pulse 0.4.0 release train. See the [repo CHANGELOG](../CHANGELOG.md) for the full ADR-0011 D11 Sonar/SAST cleanup, dependency train refresh, and Dockerfile hardening that ship in this release.
+
 ## [Unreleased]
 
 ### Changed

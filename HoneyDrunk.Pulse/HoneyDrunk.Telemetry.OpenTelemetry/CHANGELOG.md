@@ -5,6 +5,18 @@ All notable changes to HoneyDrunk.Telemetry.OpenTelemetry will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-28
+
+### Changed
+
+- `ActivityEnricher`: the two `EnrichWithGridContext` overloads moved adjacent (Sonar S4136).
+
+### Internal
+
+- Bumped `HoneyDrunk.Kernel.Abstractions` `0.7.0 -> 0.8.0`.
+- Bumped `Microsoft.Extensions.Configuration.Abstractions` / `Microsoft.Extensions.DependencyInjection.Abstractions` / `Microsoft.Extensions.Logging.Abstractions` `10.0.7 -> 10.0.8`.
+- See the [repo CHANGELOG](../CHANGELOG.md) for the full release notes.
+
 ## [Unreleased]
 
 ### Changed

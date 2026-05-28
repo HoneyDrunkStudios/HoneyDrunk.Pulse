@@ -7,60 +7,41 @@ namespace HoneyDrunk.Telemetry.Sink.Shared;
 /// <summary>
 /// Internal adapter for shared HTTP OTLP sink option values.
 /// </summary>
-internal sealed class HttpOtlpSinkOptionsAdapter : IHttpOtlpSinkOptions
+/// <param name="endpoint">The OTLP endpoint URL.</param>
+/// <param name="enabled">A value indicating whether the sink is enabled.</param>
+/// <param name="timeoutSeconds">The HTTP client timeout in seconds.</param>
+/// <param name="maxRetries">The maximum number of retry attempts.</param>
+/// <param name="headers">Optional custom headers to include in requests.</param>
+/// <param name="authSecretNames">Bundle of Vault secret names that resolve HTTP authentication material.</param>
+internal sealed class HttpOtlpSinkOptionsAdapter(
+    string? endpoint,
+    bool enabled,
+    int timeoutSeconds,
+    int maxRetries,
+    Dictionary<string, string> headers,
+    HttpOtlpSinkAuthSecretNames authSecretNames) : IHttpOtlpSinkOptions
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="HttpOtlpSinkOptionsAdapter"/> class.
-    /// </summary>
-    /// <param name="endpoint">The OTLP endpoint URL.</param>
-    /// <param name="enabled">A value indicating whether the sink is enabled.</param>
-    /// <param name="timeoutSeconds">The HTTP client timeout in seconds.</param>
-    /// <param name="maxRetries">The maximum number of retry attempts.</param>
-    /// <param name="headers">Optional custom headers to include in requests.</param>
-    /// <param name="basicAuthSecretName">The Vault secret name for an Authorization header or Basic auth value.</param>
-    /// <param name="usernameSecretName">The Vault secret name for the basic auth username.</param>
-    /// <param name="passwordSecretName">The Vault secret name for the basic auth password.</param>
-    public HttpOtlpSinkOptionsAdapter(
-        string? endpoint,
-        bool enabled,
-        int timeoutSeconds,
-        int maxRetries,
-        Dictionary<string, string> headers,
-        string basicAuthSecretName,
-        string usernameSecretName,
-        string passwordSecretName)
-    {
-        Endpoint = endpoint;
-        Enabled = enabled;
-        TimeoutSeconds = timeoutSeconds;
-        MaxRetries = maxRetries;
-        Headers = headers;
-        BasicAuthSecretName = basicAuthSecretName;
-        UsernameSecretName = usernameSecretName;
-        PasswordSecretName = passwordSecretName;
-    }
+    /// <inheritdoc />
+    public string? Endpoint { get; } = endpoint;
 
     /// <inheritdoc />
-    public string? Endpoint { get; }
+    public bool Enabled { get; } = enabled;
 
     /// <inheritdoc />
-    public bool Enabled { get; }
+    public int TimeoutSeconds { get; } = timeoutSeconds;
 
     /// <inheritdoc />
-    public int TimeoutSeconds { get; }
+    public int MaxRetries { get; } = maxRetries;
 
     /// <inheritdoc />
-    public int MaxRetries { get; }
+    public Dictionary<string, string> Headers { get; } = headers;
 
     /// <inheritdoc />
-    public Dictionary<string, string> Headers { get; }
+    public string BasicAuthSecretName { get; } = authSecretNames.BasicAuthSecretName;
 
     /// <inheritdoc />
-    public string BasicAuthSecretName { get; }
+    public string UsernameSecretName { get; } = authSecretNames.UsernameSecretName;
 
     /// <inheritdoc />
-    public string UsernameSecretName { get; }
-
-    /// <inheritdoc />
-    public string PasswordSecretName { get; }
+    public string PasswordSecretName { get; } = authSecretNames.PasswordSecretName;
 }

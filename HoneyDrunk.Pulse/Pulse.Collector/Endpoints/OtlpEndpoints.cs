@@ -14,6 +14,13 @@ namespace HoneyDrunk.Pulse.Collector.Endpoints;
 /// </summary>
 public static class OtlpEndpoints
 {
+    private const string ContentTypeJson = "application/json";
+    private const string ContentTypeProtobuf = "application/x-protobuf";
+    private const string OtlpTag = "OTLP";
+    private const string SourceServiceHeader = "X-Source-Service";
+    private const string SourceNodeIdHeader = "X-Source-NodeId";
+    private const string StatusAccepted = "accepted";
+
     /// <summary>
     /// Maps OTLP receiving endpoints.
     /// </summary>
@@ -24,32 +31,32 @@ public static class OtlpEndpoints
         // OTLP HTTP Traces endpoint
         endpoints.MapPost("/otlp/v1/traces", HandleTracesAsync)
             .WithName("OtlpTraces")
-            .WithTags("OTLP")
-            .Accepts<object>("application/x-protobuf", "application/json");
+            .WithTags(OtlpTag)
+            .Accepts<object>(ContentTypeProtobuf, ContentTypeJson);
 
         // OTLP HTTP Metrics endpoint
         endpoints.MapPost("/otlp/v1/metrics", HandleMetricsAsync)
             .WithName("OtlpMetrics")
-            .WithTags("OTLP")
-            .Accepts<object>("application/x-protobuf", "application/json");
+            .WithTags(OtlpTag)
+            .Accepts<object>(ContentTypeProtobuf, ContentTypeJson);
 
         // OTLP HTTP Logs endpoint
         endpoints.MapPost("/otlp/v1/logs", HandleLogsAsync)
             .WithName("OtlpLogs")
-            .WithTags("OTLP")
-            .Accepts<object>("application/x-protobuf", "application/json");
+            .WithTags(OtlpTag)
+            .Accepts<object>(ContentTypeProtobuf, ContentTypeJson);
 
         // Custom analytics events endpoint
         endpoints.MapPost("/otlp/v1/analytics", HandleAnalyticsAsync)
             .WithName("Analytics")
             .WithTags("Analytics")
-            .Accepts<AnalyticsEventsRequest>("application/json");
+            .Accepts<AnalyticsEventsRequest>(ContentTypeJson);
 
         // Error reporting endpoint
         endpoints.MapPost("/otlp/v1/errors", HandleErrorAsync)
             .WithName("Errors")
             .WithTags("Errors")
-            .Accepts<ErrorReportRequest>("application/json");
+            .Accepts<ErrorReportRequest>(ContentTypeJson);
 
         return endpoints;
     }
@@ -79,9 +86,9 @@ public static class OtlpEndpoints
                 contentType,
                 context.RequestAborted).ConfigureAwait(false);
 
-            var sourceName = context.Request.Headers["X-Source-Service"].FirstOrDefault()
+            var sourceName = context.Request.Headers[SourceServiceHeader].FirstOrDefault()
                 ?? (result.ResourceNames.Count > 0 ? result.ResourceNames[0] : null);
-            var sourceNodeId = context.Request.Headers["X-Source-NodeId"].FirstOrDefault();
+            var sourceNodeId = context.Request.Headers[SourceNodeIdHeader].FirstOrDefault();
             var tenantId = ResolveTenantId(context);
 
             // Pass error spans for forwarding to Sentry and raw OTLP data for trace sinks
@@ -97,7 +104,7 @@ public static class OtlpEndpoints
 
             return Results.Ok(new
             {
-                Status = "accepted",
+                Status = StatusAccepted,
                 result.SpanCount,
                 ErrorCount = result.ErrorSpans.Count,
             });
@@ -129,9 +136,9 @@ public static class OtlpEndpoints
                 contentType,
                 context.RequestAborted).ConfigureAwait(false);
 
-            var sourceName = context.Request.Headers["X-Source-Service"].FirstOrDefault()
+            var sourceName = context.Request.Headers[SourceServiceHeader].FirstOrDefault()
                 ?? (result.ResourceNames.Count > 0 ? result.ResourceNames[0] : null);
-            var sourceNodeId = context.Request.Headers["X-Source-NodeId"].FirstOrDefault();
+            var sourceNodeId = context.Request.Headers[SourceNodeIdHeader].FirstOrDefault();
             var tenantId = ResolveTenantId(context);
 
             await pipeline.ProcessMetricsAsync(
@@ -143,7 +150,7 @@ public static class OtlpEndpoints
                 tenantId: tenantId,
                 cancellationToken: context.RequestAborted).ConfigureAwait(false);
 
-            return Results.Ok(new { Status = "accepted", result.MetricCount, result.DataPointCount });
+            return Results.Ok(new { Status = StatusAccepted, result.MetricCount, result.DataPointCount });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -172,9 +179,9 @@ public static class OtlpEndpoints
                 contentType,
                 context.RequestAborted).ConfigureAwait(false);
 
-            var sourceName = context.Request.Headers["X-Source-Service"].FirstOrDefault()
+            var sourceName = context.Request.Headers[SourceServiceHeader].FirstOrDefault()
                 ?? (result.ResourceNames.Count > 0 ? result.ResourceNames[0] : null);
-            var sourceNodeId = context.Request.Headers["X-Source-NodeId"].FirstOrDefault();
+            var sourceNodeId = context.Request.Headers[SourceNodeIdHeader].FirstOrDefault();
             var tenantId = ResolveTenantId(context);
 
             // Pass error logs for forwarding to Sentry and raw OTLP data for log sinks
@@ -191,7 +198,7 @@ public static class OtlpEndpoints
 
             return Results.Ok(new
             {
-                Status = "accepted",
+                Status = StatusAccepted,
                 result.LogRecordCount,
                 ErrorLogCount = result.ErrorLogs.Count,
             });
@@ -245,9 +252,9 @@ public static class OtlpEndpoints
             }).ToList();
 
             var sourceName = request.SourceService
-                ?? context.Request.Headers["X-Source-Service"].FirstOrDefault();
+                ?? context.Request.Headers[SourceServiceHeader].FirstOrDefault();
             var sourceNodeId = request.SourceNodeId
-                ?? context.Request.Headers["X-Source-NodeId"].FirstOrDefault();
+                ?? context.Request.Headers[SourceNodeIdHeader].FirstOrDefault();
             var tenantId = ResolveTenantId(context);
 
             await pipeline.ProcessAnalyticsEventsAsync(
@@ -257,7 +264,7 @@ public static class OtlpEndpoints
                 tenantId: tenantId,
                 cancellationToken: context.RequestAborted).ConfigureAwait(false);
 
-            return Results.Ok(new { Status = "accepted", events.Count });
+            return Results.Ok(new { Status = StatusAccepted, events.Count });
         }
         catch (JsonException ex)
         {
@@ -313,7 +320,7 @@ public static class OtlpEndpoints
                 }
             }
 
-            var sourceName = context.Request.Headers["X-Source-Service"].FirstOrDefault();
+            var sourceName = context.Request.Headers[SourceServiceHeader].FirstOrDefault();
             var tenantId = request.TenantId ?? ResolveTenantId(context);
             if (!string.IsNullOrEmpty(tenantId))
             {
@@ -322,7 +329,7 @@ public static class OtlpEndpoints
 
             await pipeline.ProcessErrorAsync(errorEvent, sourceName, context.RequestAborted).ConfigureAwait(false);
 
-            return Results.Ok(new { Status = "accepted" });
+            return Results.Ok(new { Status = StatusAccepted });
         }
         catch (JsonException ex)
         {

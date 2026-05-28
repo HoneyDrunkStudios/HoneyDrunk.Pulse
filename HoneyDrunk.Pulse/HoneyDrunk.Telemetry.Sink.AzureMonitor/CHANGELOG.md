@@ -5,6 +5,18 @@ All notable changes to HoneyDrunk.Telemetry.Sink.AzureMonitor will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-28
+
+### Changed
+
+- `ServiceCollectionExtensions`: the two `AddAzureMonitorSink` overloads moved adjacent (Sonar S4136).
+
+### Internal
+
+- Bumped `Azure.Monitor.OpenTelemetry.Exporter` `1.7.0 -> 1.8.1`.
+- Bumped `Microsoft.Extensions.*` `10.0.7 -> 10.0.8`.
+- See the [repo CHANGELOG](../CHANGELOG.md) for the full release notes.
+
 ## [Unreleased]
 
 ### Changed

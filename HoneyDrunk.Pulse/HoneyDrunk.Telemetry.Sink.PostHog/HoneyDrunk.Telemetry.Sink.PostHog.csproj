@@ -8,7 +8,7 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Telemetry.Sink.PostHog</PackageId>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>PostHog analytics sink for HoneyDrunk telemetry. Captures product analytics events with batching, retry logic, and rate-limit handling.</Description>
     <PackageReleaseNotes>v0.3.0: Kernel adoption alignment and HTTP OTLP sink helper consolidation. See CHANGELOG.md for details.</PackageReleaseNotes>
@@ -34,11 +34,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="HoneyDrunk.Vault" Version="0.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.7" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
+    <PackageReference Include="HoneyDrunk.Vault" Version="0.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
   </ItemGroup>
 
   <ItemGroup>

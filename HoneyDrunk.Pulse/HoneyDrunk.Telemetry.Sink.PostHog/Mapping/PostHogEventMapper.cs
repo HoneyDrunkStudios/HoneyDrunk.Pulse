@@ -108,12 +108,9 @@ public sealed class PostHogEventMapper(PostHogSinkOptions options)
         AddIfNotEmpty(properties, TelemetryTagKeys.HoneyDrunk.Environment, telemetryEvent.Environment);
 
         // Add custom properties (with filtering)
-        foreach (var property in telemetryEvent.Properties)
+        foreach (var property in telemetryEvent.Properties.Where(p => ShouldIncludeProperty(p.Key)))
         {
-            if (ShouldIncludeProperty(property.Key))
-            {
-                properties[property.Key] = property.Value;
-            }
+            properties[property.Key] = property.Value;
         }
 
         return properties;

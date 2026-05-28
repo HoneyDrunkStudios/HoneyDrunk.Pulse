@@ -9,6 +9,8 @@ namespace HoneyDrunk.Pulse.Collector.Endpoints;
 /// </summary>
 public static class HealthEndpoints
 {
+    private const string HealthTag = "Health";
+
     /// <summary>
     /// Maps health and readiness endpoints.
     /// </summary>
@@ -17,16 +19,16 @@ public static class HealthEndpoints
     public static IEndpointRouteBuilder MapHealthEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }))
-            .WithName("Health")
-            .WithTags("Health");
+            .WithName(HealthTag)
+            .WithTags(HealthTag);
 
         endpoints.MapGet("/health/ready", () => Results.Ok(new { Status = "Ready" }))
             .WithName("Ready")
-            .WithTags("Health");
+            .WithTags(HealthTag);
 
         endpoints.MapGet("/health/live", () => Results.Ok(new { Status = "Live" }))
             .WithName("Liveness")
-            .WithTags("Health");
+            .WithTags(HealthTag);
 
         return endpoints;
     }

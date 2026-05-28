@@ -47,9 +47,10 @@ public sealed partial class MimirSink(
                 _options.TimeoutSeconds,
                 _options.MaxRetries,
                 _options.Headers,
-                _options.BasicAuthSecretName,
-                _options.UsernameSecretName,
-                _options.PasswordSecretName),
+                new HttpOtlpSinkAuthSecretNames(
+                    _options.BasicAuthSecretName,
+                    _options.UsernameSecretName,
+                    _options.PasswordSecretName)),
             metricData,
             contentType,
             new HttpOtlpSinkLogCallbacks(
