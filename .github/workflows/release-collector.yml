@@ -20,6 +20,10 @@ name: Release Pulse.Collector
 # Telemetry abstractions/pipeline, and every telemetry sink. The Sink.* glob
 # covers all concrete sinks and the shared-source Sink.Shared, so a newly-added
 # sink is auto-covered without editing this filter (D3).
+#
+# Replaces the previous App Service slot-swap deploy.yml: Pulse.Collector is
+# gRPC, and ADR-0015 puts containerized Nodes on Azure Container Apps with
+# revision-based traffic shifting (not App Service slot swap).
 
 on:
   push:
@@ -35,8 +39,10 @@ on:
       - 'HoneyDrunk.Pulse/HoneyDrunk.Telemetry.Abstractions/**'
       - 'HoneyDrunk.Pulse/HoneyDrunk.Telemetry.OpenTelemetry/**'
       - 'HoneyDrunk.Pulse/HoneyDrunk.Telemetry.Sink.*/**'
-      # Solution file and the workflow itself.
+      # Solution file, Docker ignore rules, and the workflow itself — all affect
+      # the built image. (No NuGet.config in this repo.)
       - 'HoneyDrunk.Pulse/HoneyDrunk.Pulse.slnx'
+      - 'HoneyDrunk.Pulse/.dockerignore'
       - '.github/workflows/release-collector.yml'
     tags:
       - 'collector-v*'
@@ -51,9 +57,10 @@ on:
           - prod
         default: dev
 
+# id-token: write is granted per-job (deploy only) for least privilege; the
+# workflow default stays read-only.
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   classify:
@@ -62,9 +69,10 @@ jobs:
     # ADR-0033 D2: the single, explicit place trigger intent is mapped to a
     # target environment. resolve/deploy consume these outputs; the environment
     # is never inferred implicitly from vars.HD_ENV or scattered across jobs.
+    # Output names use underscores (repo convention) for unambiguous dot-access.
     outputs:
-      target-env: ${{ steps.map.outputs.target-env }}
-      image-tag: ${{ steps.map.outputs.image-tag }}
+      target_env: ${{ steps.map.outputs.target_env }}
+      image_tag: ${{ steps.map.outputs.image_tag }}
     steps:
       - name: Map trigger to environment
         id: map
@@ -91,22 +99,23 @@ jobs:
             dev|staging|prod) ;;
             *) echo "::error::Unrecognized target environment '$TARGET'"; exit 1 ;;
           esac
-          # ADR-0033 D1: dev images are SHA-identified (no version stamp);
+          # ADR-0033 D1: dev images are SHA-identified (no version stamp), tagged
+          # dev-<sha> so ACR artifacts stay distinguishable as dev builds;
           # promotion tags carry the SemVer-shaped ref as the image tag.
           if [[ "$REF" == refs/tags/* ]]; then
             IMAGE_TAG="$REF_NAME"
           else
-            IMAGE_TAG="$SHA"
+            IMAGE_TAG="dev-$SHA"
           fi
-          echo "target-env=$TARGET" >> "$GITHUB_OUTPUT"
-          echo "image-tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          echo "target_env=$TARGET" >> "$GITHUB_OUTPUT"
+          echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
           echo "Resolved target environment: $TARGET (image tag: $IMAGE_TAG)"
 
   resolve:
-    name: Resolve ${{ needs.classify.outputs.target-env }} config
+    name: Resolve ${{ needs.classify.outputs.target_env }} config
     needs: classify
     runs-on: ubuntu-latest
-    environment: ${{ needs.classify.outputs.target-env }}
+    environment: ${{ needs.classify.outputs.target_env }}
     # Output names use underscores (not hyphens). Dot-notation access
     # (needs.resolve.outputs.acr_registry) is unambiguous this way — avoids
     # any reader/linter doubt about hyphenated context keys.
@@ -121,22 +130,26 @@ jobs:
     steps:
       - name: Echo resolved targets
         run: |
-          echo "Environment   : ${{ needs.classify.outputs.target-env }}"
+          echo "Environment   : ${{ needs.classify.outputs.target_env }}"
           echo "Container App : ca-hd-pulse-${{ vars.HD_ENV }}"
           echo "Resource Grp  : rg-hd-pulse-${{ vars.HD_ENV }}"
           echo "ACR           : acrhdshared${{ vars.HD_ENV }}.azurecr.io"
           echo "Key Vault     : kv-hd-pulse-${{ vars.HD_ENV }}"
 
   deploy:
-    name: Deploy to ${{ needs.classify.outputs.target-env }}
+    name: Deploy to ${{ needs.classify.outputs.target_env }}
     needs: [classify, resolve]
+    # Only this job authenticates to Azure via OIDC, so id-token lives here.
+    permissions:
+      contents: read
+      id-token: write
     # ADR-0033 D5: concurrency group keyed on the resolved environment, so dev
     # churn can never cancel a staging/prod promotion (they land in different
     # groups). Dev supersedes in-flight dev deploys (cancel-in-progress: true);
     # promotions queue and are never silently cancelled (false).
     concurrency:
-      group: release-collector-${{ needs.classify.outputs.target-env }}
-      cancel-in-progress: ${{ needs.classify.outputs.target-env == 'dev' }}
+      group: release-collector-${{ needs.classify.outputs.target_env }}
+      cancel-in-progress: ${{ needs.classify.outputs.target_env == 'dev' }}
     # A reusable-workflow caller job cannot declare `environment:` itself, so
     # the environment is passed through as an input. The reusable workflow's
     # deploy job runs under that environment, making the OIDC token subject
@@ -144,12 +157,12 @@ jobs:
     # the environment-scoped federated credential on sp-hd-pulse-<env>.
     uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/job-deploy-container-app.yml@main
     with:
-      environment: ${{ needs.classify.outputs.target-env }}
+      environment: ${{ needs.classify.outputs.target_env }}
       # Dockerfile declares "Build context: HoneyDrunk.Pulse/ (solution root)".
       build-context: HoneyDrunk.Pulse
       dockerfile: Pulse.Collector/Dockerfile
       image-name: honeydrunk-pulse-collector
-      image-tag: ${{ needs.classify.outputs.image-tag }}
+      image-tag: ${{ needs.classify.outputs.image_tag }}
       # Left-side keys are reusable-workflow input names (stay hyphenated);
       # right-side are this workflow's resolve outputs (underscored).
       acr-registry: ${{ needs.resolve.outputs.acr_registry }}
