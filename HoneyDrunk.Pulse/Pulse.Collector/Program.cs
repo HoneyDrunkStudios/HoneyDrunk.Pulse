@@ -57,7 +57,7 @@ public class Program
             options.EnvironmentId = new EnvironmentId(builder.Environment.EnvironmentName.ToLowerInvariant());
         })
         .AddVaultWithAzureKeyVaultBootstrap()
-        .AddAppConfiguration();
+        .AddAppConfiguration(builder.Configuration);
 
         // Bind options once and register the same instance into DI (single source of truth)
         var collectorOptions = new PulseCollectorOptions();

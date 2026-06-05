@@ -24,10 +24,10 @@
     <PackageReference Include="HoneyDrunk.Transport" Version="0.7.1" />
     <PackageReference Include="HoneyDrunk.Transport.AzureServiceBus" Version="0.7.1" />
     <PackageReference Include="HoneyDrunk.Transport.InMemory" Version="0.7.1" />
-    <PackageReference Include="HoneyDrunk.Vault" Version="0.7.0" />
-    <PackageReference Include="HoneyDrunk.Vault.EventGrid" Version="0.7.0" />
-    <PackageReference Include="HoneyDrunk.Vault.Providers.AppConfiguration" Version="0.7.0" />
-    <PackageReference Include="HoneyDrunk.Vault.Providers.AzureKeyVault" Version="0.7.0" />
+    <PackageReference Include="HoneyDrunk.Vault" Version="0.8.0" />
+    <PackageReference Include="HoneyDrunk.Vault.EventGrid" Version="0.8.0" />
+    <PackageReference Include="HoneyDrunk.Vault.Providers.AppConfiguration" Version="0.8.0" />
+    <PackageReference Include="HoneyDrunk.Vault.Providers.AzureKeyVault" Version="0.8.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
   </ItemGroup>
