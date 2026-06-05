@@ -23,7 +23,6 @@ using HoneyDrunk.Telemetry.Sink.Tempo.Extensions;
 using HoneyDrunk.Vault.EventGrid.Extensions;
 using HoneyDrunk.Vault.Providers.AppConfiguration.Extensions;
 using HoneyDrunk.Vault.Providers.AzureKeyVault.Extensions;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace HoneyDrunk.Pulse.Collector;
@@ -49,7 +48,6 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Configuration["HONEYDRUNK_NODE_ID"] ??= WellKnownNodes.Ops.Pulse.Value;
-        builder.Services.Replace(ServiceDescriptor.Singleton<IConfiguration>(builder.Configuration));
 
         builder.Services.AddHoneyDrunkNode(options =>
         {
