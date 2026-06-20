@@ -23,5 +23,5 @@ dotnet run --project HoneyDrunk.Pulse/HoneyDrunk.Pulse.Sample.Api/HoneyDrunk.Pul
 Then send requests (see `HoneyDrunk.Pulse.Sample.Api.http`), e.g.:
 
 ```bash
-curl http://localhost:5xxx/weatherforecast
+curl http://localhost:5062/weatherforecast
 ```
