@@ -366,11 +366,6 @@ Applications using HoneyDrunk.Web.Rest:
 
 ## 📖 Additional Resources
 
-### Official Documentation
-- [README.md](../README.md) - Project overview and quick start
-- [Abstractions README](../HoneyDrunk.Web.Rest.Abstractions/README.md) - Contracts documentation
-- [AspNetCore README](../HoneyDrunk.Web.Rest.AspNetCore/README.md) - Middleware documentation
-
 ### Related Projects
 - [HoneyDrunk.Kernel](https://github.com/HoneyDrunkStudios/HoneyDrunk.Kernel) - Core Grid primitives (optional integration)
 - [HoneyDrunk.Auth](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth) - Authentication and authorization (optional integration)
