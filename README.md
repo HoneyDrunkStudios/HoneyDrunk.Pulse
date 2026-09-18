@@ -155,15 +155,15 @@ HoneyDrunk.Pulse/
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `HoneyDrunk.Pulse.Contracts` | 0.1.0 | Shared event contracts (netstandard2.0 + net8.0 + net10.0) |
-| `HoneyDrunk.Telemetry.Abstractions` | 0.1.0 | Sink interfaces and telemetry models |
-| `HoneyDrunk.Telemetry.OpenTelemetry` | 0.1.0 | OTel wiring for Grid Nodes |
-| `HoneyDrunk.Telemetry.Sink.Tempo` | 0.1.0 | Grafana Tempo trace sink |
-| `HoneyDrunk.Telemetry.Sink.Loki` | 0.1.0 | Grafana Loki log sink |
-| `HoneyDrunk.Telemetry.Sink.Mimir` | 0.1.0 | Grafana Mimir metrics sink |
-| `HoneyDrunk.Telemetry.Sink.PostHog` | 0.1.0 | PostHog analytics sink |
-| `HoneyDrunk.Telemetry.Sink.Sentry` | 0.1.0 | Sentry error tracking sink |
-| `HoneyDrunk.Telemetry.Sink.AzureMonitor` | 0.1.0 | Azure Monitor sink |
+| `HoneyDrunk.Pulse.Contracts` | 0.4.0 | Shared event contracts (netstandard2.0 + net8.0 + net10.0) |
+| `HoneyDrunk.Telemetry.Abstractions` | 0.4.0 | Sink interfaces and telemetry models |
+| `HoneyDrunk.Telemetry.OpenTelemetry` | 0.4.0 | OTel wiring for Grid Nodes |
+| `HoneyDrunk.Telemetry.Sink.Tempo` | 0.4.0 | Grafana Tempo trace sink |
+| `HoneyDrunk.Telemetry.Sink.Loki` | 0.4.0 | Grafana Loki log sink |
+| `HoneyDrunk.Telemetry.Sink.Mimir` | 0.4.0 | Grafana Mimir metrics sink |
+| `HoneyDrunk.Telemetry.Sink.PostHog` | 0.4.0 | PostHog analytics sink |
+| `HoneyDrunk.Telemetry.Sink.Sentry` | 0.4.0 | Sentry error tracking sink |
+| `HoneyDrunk.Telemetry.Sink.AzureMonitor` | 0.4.0 | Azure Monitor sink |
 
 ## 🔗 Related Projects
 
