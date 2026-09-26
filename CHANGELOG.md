@@ -1,11 +1,56 @@
 # Changelog
 
+## [0.4.1] - 2026-09-26
+
+### Changed
+
+- Refresh stable NuGet dependencies; preserve target frameworks and HoneyDrunk public contracts.
+
+| Dependency | Previous | Updated |
+| --- | --- | --- |
+| Azure.Monitor.OpenTelemetry.Exporter | 1.8.1 | 1.9.0 |
+| Grpc.AspNetCore | 2.80.0 | 2.84.0 |
+| Grpc.Tools | 2.80.0 | 2.84.0 |
+| Microsoft.AspNetCore.Mvc.Testing | 10.0.8 | 10.0.12 |
+| Microsoft.CodeAnalysis.NetAnalyzers | 10.0.202 | 10.0.401 |
+| Microsoft.Extensions.Configuration.Abstractions | 10.0.8 | 10.0.12 |
+| Microsoft.Extensions.DependencyInjection.Abstractions | 10.0.8 | 10.0.12 |
+| Microsoft.Extensions.Hosting | 10.0.8 | 10.0.12 |
+| Microsoft.Extensions.Http | 10.0.8 | 10.0.12 |
+| Microsoft.Extensions.Logging.Abstractions | 10.0.8 | 10.0.12 |
+| Microsoft.Extensions.Options.ConfigurationExtensions | 10.0.8 | 10.0.12 |
+| OpenTelemetry | 1.15.3 | 1.19.1 |
+| OpenTelemetry.Exporter.OpenTelemetryProtocol | 1.15.3 | 1.19.1 |
+| OpenTelemetry.Extensions.Hosting | 1.15.3 | 1.19.1 |
+| OpenTelemetry.Instrumentation.AspNetCore | 1.15.2 | 1.19.0 |
+| OpenTelemetry.Instrumentation.Http | 1.15.1 | 1.19.0 |
+| OpenTelemetry.Instrumentation.Runtime | 1.15.1 | 1.19.0 |
+| Sentry | 6.6.0 | 6.11.1 |
+
+
 All notable changes to the HoneyDrunk.Pulse repository are documented here. The
 format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Per-package detail lives in each package's own `CHANGELOG.md` under
 `HoneyDrunk.Pulse/`.
+
+
+
+
+### Verified HoneyDrunk dependencies
+
+- HoneyDrunk.Kernel: 0.8.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Kernel.Abstractions: 0.8.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Standards: 0.2.9 -> 0.3.0 (verified on NuGet.org).
+- HoneyDrunk.Standards.Tests: 0.2.9 -> 0.3.0 (verified on NuGet.org).
+- HoneyDrunk.Transport: 0.7.1 -> 0.7.2 (verified on NuGet.org).
+- HoneyDrunk.Transport.AzureServiceBus: 0.7.1 -> 0.7.2 (verified on NuGet.org).
+- HoneyDrunk.Transport.InMemory: 0.7.1 -> 0.7.2 (verified on NuGet.org).
+- HoneyDrunk.Vault: 0.8.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Vault.EventGrid: 0.8.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Vault.Providers.AppConfiguration: 0.8.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Vault.Providers.AzureKeyVault: 0.8.0 -> 0.8.1 (verified on NuGet.org).
 
 ## Unreleased
 
