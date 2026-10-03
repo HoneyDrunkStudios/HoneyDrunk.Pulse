@@ -1,7 +1,9 @@
 # Agents — HoneyDrunk.Pulse
 
-This file is for autonomous coding agents (Codex and other non-IDE agents) executing scoped
-tasks in `HoneyDrunk.Pulse`, the Grid's **observability engine**.
+This file is for every coding agent (Codex, Claude Code and others) working in
+`HoneyDrunk.Pulse`, the Grid's **observability engine**: telemetry abstractions,
+OpenTelemetry wiring, the multi-backend sink pipeline, and the Pulse Collector OTLP receiver.
+It is the single agent instruction file; there is no separate `CLAUDE.md`.
 
 ## Read This First
 
@@ -28,6 +30,17 @@ conventions. Read it before implementing. This file only states agent-execution 
 6. Run `dotnet build -c Release` and `dotnet test -c Release` locally. Analyzer compliance
    (`HoneyDrunk.Standards`) is mandatory; warnings are errors.
 7. Open a PR aligned to the acceptance criteria.
+
+## Interactive Sessions
+
+When working hands-on with a person rather than executing a scoped issue:
+
+- Plan and decompose before large edits.
+- Report build and test failures with their output.
+- Pulse builds on OpenTelemetry and does not replace it; it routes telemetry and does not
+  store or dashboard it.
+- ADR-0015: the deployable is **Pulse.Collector** (`collector-v*`). The `PostHog:Host`
+  App Configuration gap is a known, scoped follow-up; do not fold it into unrelated work.
 
 ## Do Not
 
