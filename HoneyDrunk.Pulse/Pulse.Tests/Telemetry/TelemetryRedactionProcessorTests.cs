@@ -38,12 +38,8 @@ public sealed class TelemetryRedactionProcessorTests
             .Build();
         var parent = new ActivityContext(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(), ActivityTraceFlags.Recorded);
         var linkContext = new ActivityContext(ActivityTraceId.CreateRandom(), ActivitySpanId.CreateRandom(), ActivityTraceFlags.Recorded);
-        using var activity = source.StartActivity("token=span-sensitive", ActivityKind.Internal, parent);
-        activity.Should().NotBeNull();
-        if (activity is null)
-        {
-            return;
-        }
+        using var activity = source.StartActivity("token=span-sensitive", ActivityKind.Internal, parent)
+            ?? throw new InvalidOperationException("The test source did not create an activity.");
 
         activity.AddTag("password", "first-sensitive");
         activity.AddTag("password", "second-sensitive");
@@ -92,12 +88,14 @@ public sealed class TelemetryRedactionProcessorTests
             traceId = record.TraceId;
             spanId = record.SpanId;
         });
+        using var redactionProcessor = new LogRedactionProcessor();
+        using var exportProcessor = new SimpleLogRecordExportProcessor(exporter);
         using var factory = LoggerFactory.Create(logging => logging.AddOpenTelemetry(options =>
         {
             options.IncludeFormattedMessage = true;
             options.IncludeScopes = false;
-            options.AddProcessor(new LogRedactionProcessor());
-            options.AddProcessor(new SimpleLogRecordExportProcessor(exporter));
+            options.AddProcessor(redactionProcessor);
+            options.AddProcessor(exportProcessor);
         }));
         using var activity = new Activity("log-test");
         activity.SetIdFormat(ActivityIdFormat.W3C);
@@ -129,11 +127,13 @@ public sealed class TelemetryRedactionProcessorTests
     {
         string? formattedMessage = null;
         using var exporter = new CaptureExporter<LogRecord>(record => formattedMessage = record.FormattedMessage);
+        using var redactionProcessor = new LogRedactionProcessor();
+        using var exportProcessor = new SimpleLogRecordExportProcessor(exporter);
         using var factory = LoggerFactory.Create(logging => logging.AddOpenTelemetry(options =>
         {
             options.IncludeFormattedMessage = true;
-            options.AddProcessor(new LogRedactionProcessor());
-            options.AddProcessor(new SimpleLogRecordExportProcessor(exporter));
+            options.AddProcessor(redactionProcessor);
+            options.AddProcessor(exportProcessor);
         }));
         using var json = JsonDocument.Parse("{\"count\":2,\"labels\":[\"east\",\"west\"]}");
         var attributes = new List<KeyValuePair<string, object?>>
@@ -167,11 +167,13 @@ public sealed class TelemetryRedactionProcessorTests
             formattedMessage = record.FormattedMessage;
             exportedAttributes = JsonSerializer.Serialize(record.Attributes);
         });
+        using var redactionProcessor = new LogRedactionProcessor();
+        using var exportProcessor = new SimpleLogRecordExportProcessor(exporter);
         using var factory = LoggerFactory.Create(logging => logging.AddOpenTelemetry(options =>
         {
             options.IncludeFormattedMessage = true;
-            options.AddProcessor(new LogRedactionProcessor());
-            options.AddProcessor(new SimpleLogRecordExportProcessor(exporter));
+            options.AddProcessor(redactionProcessor);
+            options.AddProcessor(exportProcessor);
         }));
         object collection = nestedDictionary
             ? new object?[] { new Dictionary<string, object?> { ["password"] = "array-sensitive" } }
@@ -196,11 +198,13 @@ public sealed class TelemetryRedactionProcessorTests
     {
         string? exportedText = null;
         using var exporter = new CaptureExporter<LogRecord>(record => exportedText = $"{record.Body} {record.FormattedMessage}");
+        using var redactionProcessor = new LogRedactionProcessor();
+        using var exportProcessor = new SimpleLogRecordExportProcessor(exporter);
         using var factory = LoggerFactory.Create(logging => logging.AddOpenTelemetry(options =>
         {
             options.IncludeFormattedMessage = true;
-            options.AddProcessor(new LogRedactionProcessor());
-            options.AddProcessor(new SimpleLogRecordExportProcessor(exporter));
+            options.AddProcessor(redactionProcessor);
+            options.AddProcessor(exportProcessor);
         }));
 
         factory.CreateLogger("redaction-test").Log(LogLevel.Warning, default, "email=somebody@example.test password=hidden", null, (state, _) => state);

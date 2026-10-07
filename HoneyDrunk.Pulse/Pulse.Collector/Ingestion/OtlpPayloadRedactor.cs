@@ -109,13 +109,10 @@ public static class OtlpPayloadRedactor
             {
                 RedactMessage(child, depth + 1);
             }
-            else if (field.FieldType == FieldType.String && fieldValue is string text)
+            else if (field.FieldType == FieldType.String && fieldValue is string { Length: > 0 } text)
             {
                 // Empty oneof alternatives must stay unset.
-                if (text.Length > 0)
-                {
-                    field.Accessor.SetValue(message, TelemetryRedactor.RedactText(text));
-                }
+                field.Accessor.SetValue(message, TelemetryRedactor.RedactText(text));
             }
         }
     }
