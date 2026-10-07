@@ -81,7 +81,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogTraceParseError(ex);
+            LogTraceParseError(ex.GetType().Name);
             return OtlpTraceResult.Empty;
         }
     }
@@ -129,7 +129,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogTraceParseError(ex);
+            LogTraceParseError(ex.GetType().Name);
             return OtlpTraceResult.Empty;
         }
     }
@@ -166,7 +166,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogMetricParseError(ex);
+            LogMetricParseError(ex.GetType().Name);
             return OtlpMetricsResult.Empty;
         }
     }
@@ -208,7 +208,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogLogParseError(ex);
+            LogLogParseError(ex.GetType().Name);
             return OtlpLogsResult.Empty;
         }
     }
@@ -264,7 +264,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogLogParseError(ex);
+            LogLogParseError(ex.GetType().Name);
             return OtlpLogsResult.Empty;
         }
     }
@@ -877,7 +877,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogJsonSpanParseFallback(ex);
+            LogJsonSpanParseFallback(ex.GetType().Name);
             return Math.Max(1, bytes.Length / 300);
         }
     }
@@ -916,7 +916,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogJsonMetricParseFallback(ex);
+            LogJsonMetricParseFallback(ex.GetType().Name);
             return Math.Max(1, bytes.Length / 100);
         }
     }
@@ -955,7 +955,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogJsonLogParseFallback(ex);
+            LogJsonLogParseFallback(ex.GetType().Name);
             return Math.Max(1, bytes.Length / 150);
         }
     }
@@ -1025,7 +1025,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogServiceNameExtractionFailed(ex);
+            LogServiceNameExtractionFailed(ex.GetType().Name);
         }
 
         return [.. names];
@@ -1084,7 +1084,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogErrorSpanExtractionFailed(ex);
+            LogErrorSpanExtractionFailed(ex.GetType().Name);
         }
 
         return errorSpans;
@@ -1120,7 +1120,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogProtobufTraceParseError(ex);
+            LogProtobufTraceParseError(ex.GetType().Name);
         }
 
         return errorSpans;
@@ -1179,7 +1179,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogErrorLogExtractionFailed(ex);
+            LogErrorLogExtractionFailed(ex.GetType().Name);
         }
 
         return errorLogs;
@@ -1309,7 +1309,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            LogProtobufLogParseError(ex);
+            LogProtobufLogParseError(ex.GetType().Name);
         }
 
         return errorLogs;

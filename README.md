@@ -185,3 +185,9 @@ HoneyDrunk.Pulse/
 <p align="center">
   <a href="https://github.com/HoneyDrunkStudios">GitHub</a>
 </p>
+## Telemetry safety and operations
+
+See [the operations runbook](HoneyDrunk.Pulse/docs/TELEMETRY_OPERATIONS.md) for redaction
+boundaries, supported ingestion authentication, metric cardinality, retention proposals,
+alerting and deployment verification. Non-Development deployments must review the
+[authentication migration](HoneyDrunk.Pulse/Pulse.Collector/README.md#ingestion-authentication) before rollout.

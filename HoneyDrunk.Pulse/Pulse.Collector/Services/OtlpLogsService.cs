@@ -4,6 +4,7 @@
 
 using Google.Protobuf;
 using Grpc.Core;
+using HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
 using OpenTelemetry.Proto.Collector.Logs.V1;
 
 namespace HoneyDrunk.Pulse.Collector.Services;
@@ -62,7 +63,7 @@ public sealed class OtlpLogsService(
                     "gRPC OTLP logs received: {LogCount} logs ({ErrorCount} errors) from {Source}",
                     result.LogRecordCount,
                     result.ErrorLogs.Count,
-                    sourceName ?? "unknown");
+                    TelemetryRedactor.RedactText(sourceName) ?? "unknown");
             }
 
             return new ExportLogsServiceResponse();
@@ -73,9 +74,13 @@ public sealed class OtlpLogsService(
             // server error rates aren't inflated by ordinary disconnects.
             throw new RpcException(new Status(StatusCode.Cancelled, "Logs export cancelled by client"));
         }
+        catch (InvalidDataException)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid OTLP payload"));
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogError(ex, "Error processing gRPC OTLP logs");
+            logger.LogError("Error processing gRPC OTLP logs ({ExceptionType})", ex.GetType().Name);
             throw new RpcException(new Status(StatusCode.Internal, "Error processing logs"));
         }
     }

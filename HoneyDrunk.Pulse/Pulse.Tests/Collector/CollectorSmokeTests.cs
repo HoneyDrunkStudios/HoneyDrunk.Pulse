@@ -5,9 +5,11 @@
 using AwesomeAssertions;
 using HoneyDrunk.Kernel.Abstractions;
 using HoneyDrunk.Kernel.Abstractions.Context;
+using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 
 namespace HoneyDrunk.Pulse.Tests.Collector;
 
@@ -230,5 +232,35 @@ public class CollectorSmokeTests(CollectorWebApplicationFactory factory) : IClas
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    /// <summary>Malformed payloads are client errors and never forwarded to configured sinks.</summary>
+    /// <returns>The test task.</returns>
+    [Fact]
+    public async Task TracesEndpoint_InvalidPayload_ReturnsBadRequestWithoutExport()
+    {
+        var sink = new CapturingTraceSink();
+        using var configuredFactory = factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services => services.AddSingleton<ITraceSink>(sink)));
+        using var client = configuredFactory.CreateClient();
+        using var body = new StringContent("{invalid-json", Encoding.UTF8, "application/json");
+
+        using var response = await client.PostAsync(new Uri("/otlp/v1/traces", UriKind.Relative), body);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        sink.ExportCount.Should().Be(0);
+    }
+
+    private sealed class CapturingTraceSink : ITraceSink
+    {
+        public int ExportCount { get; private set; }
+
+        public Task ExportAsync(ReadOnlyMemory<byte> data, string contentType, CancellationToken cancellationToken = default)
+        {
+            ExportCount++;
+            return Task.CompletedTask;
+        }
+
+        public Task FlushAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }

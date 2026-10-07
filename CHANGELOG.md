@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Security
+
+- Sanitize SDK trace/log export, analytics emission, collector OTLP fan-out and custom error/analytics events with one shared redaction policy
+- Enforce JWT bearer authentication on HTTP and gRPC ingestion when configured; reject anonymous non-Development startup without an explicit isolated-gateway opt-out
+- Avoid payload-bearing exception and error-message logging at collector sink boundaries
+
+### Documentation
+
+- Document authentication migration, redaction limits, bounded metric dimensions, proposed retention and actionable delivery/alerting checks
+
+### Compatibility
+
+- Existing production configurations must enable JWT ingestion or deliberately configure an authenticated isolated gateway opt-out before rollout
+- SDK log scopes are no longer exported by default; binary OTLP attribute/body values and unknown protobuf fields are not passed through
+- In-process exceptions are exported as native Sentry type/value events with sanitized structured frames; raw exception Data and inner objects are withheld, and grouping can differ from prior SDK formatting
+
 ## [0.4.1] - 2026-09-26
 
 ### Changed

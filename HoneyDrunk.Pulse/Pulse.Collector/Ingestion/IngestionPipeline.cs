@@ -9,6 +9,7 @@ using HoneyDrunk.Pulse.Collector.Transport;
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
 using HoneyDrunk.Telemetry.Abstractions.Tags;
+using HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
 using HoneyDrunk.Telemetry.Sink.Loki.Options;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -92,6 +93,8 @@ public sealed partial class IngestionPipeline(
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
+        sourceName = TelemetryRedactor.RedactText(sourceName);
+        sourceNodeId = TelemetryRedactor.RedactText(sourceNodeId);
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessTraces");
         var stopwatch = Stopwatch.StartNew();
         var sinkFailures = 0;
@@ -135,9 +138,9 @@ public sealed partial class IngestionPipeline(
         }
         catch (Exception ex)
         {
-            LogTraceProcessingError(ex, sourceName);
+            LogTraceProcessingError(ex.GetType().Name, sourceName);
             CollectorTelemetry.RecordError("trace_processing", tenantId);
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, TelemetryRedactor.RedactText(ex.Message));
             throw;
         }
         finally
@@ -167,6 +170,8 @@ public sealed partial class IngestionPipeline(
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
+        sourceName = TelemetryRedactor.RedactText(sourceName);
+        sourceNodeId = TelemetryRedactor.RedactText(sourceNodeId);
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessMetrics");
         var stopwatch = Stopwatch.StartNew();
         var sinkFailures = 0;
@@ -204,9 +209,9 @@ public sealed partial class IngestionPipeline(
         }
         catch (Exception ex)
         {
-            LogMetricProcessingError(ex, sourceName);
+            LogMetricProcessingError(ex.GetType().Name, sourceName);
             CollectorTelemetry.RecordError("metric_processing", tenantId);
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, TelemetryRedactor.RedactText(ex.Message));
             throw;
         }
         finally
@@ -240,6 +245,8 @@ public sealed partial class IngestionPipeline(
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
+        sourceName = TelemetryRedactor.RedactText(sourceName);
+        sourceNodeId = TelemetryRedactor.RedactText(sourceNodeId);
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessLogs");
         var stopwatch = Stopwatch.StartNew();
         var sinkFailures = 0;
@@ -284,9 +291,9 @@ public sealed partial class IngestionPipeline(
         }
         catch (Exception ex)
         {
-            LogLogProcessingError(ex, sourceName);
+            LogLogProcessingError(ex.GetType().Name, sourceName);
             CollectorTelemetry.RecordError("log_processing", tenantId);
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, TelemetryRedactor.RedactText(ex.Message));
             throw;
         }
         finally
@@ -312,9 +319,11 @@ public sealed partial class IngestionPipeline(
         string? tenantId = null,
         CancellationToken cancellationToken = default)
     {
+        sourceName = TelemetryRedactor.RedactText(sourceName);
+        sourceNodeId = TelemetryRedactor.RedactText(sourceNodeId);
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessAnalyticsEvents");
         var stopwatch = Stopwatch.StartNew();
-        var eventList = events.ToList();
+        var eventList = events.Select(TelemetryRedactor.RedactTelemetryEvent).ToList();
         var sinkFailures = 0;
 
         try
@@ -331,6 +340,10 @@ public sealed partial class IngestionPipeline(
                 enricher.EnrichTelemetryEvent(evt, sourceName);
             }
 
+            // Enrichment can add context from headers or the current operation.
+            // Apply the policy after enrichment as well as copying caller-owned events.
+            eventList = eventList.Select(TelemetryRedactor.RedactTelemetryEvent).ToList();
+
             if (analyticsSink is not null && _options.EnablePostHogSink)
             {
                 try
@@ -339,7 +352,7 @@ public sealed partial class IngestionPipeline(
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
                 {
-                    LogAnalyticsSinkForwardingFailed(ex);
+                    LogAnalyticsSinkForwardingFailed(ex.GetType().Name);
                     sinkFailures++;
                 }
             }
@@ -367,9 +380,9 @@ public sealed partial class IngestionPipeline(
         }
         catch (Exception ex)
         {
-            LogAnalyticsProcessingError(ex, sourceName);
+            LogAnalyticsProcessingError(ex.GetType().Name, sourceName);
             CollectorTelemetry.RecordError("analytics_processing", tenantId);
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, TelemetryRedactor.RedactText(ex.Message));
             throw;
         }
         finally
@@ -391,25 +404,28 @@ public sealed partial class IngestionPipeline(
         string? sourceName = null,
         CancellationToken cancellationToken = default)
     {
+        sourceName = TelemetryRedactor.RedactText(sourceName);
+        errorEvent = TelemetryRedactor.RedactErrorEvent(errorEvent);
         using var activity = CollectorTelemetry.StartIngestionActivity("ProcessError");
 
         try
         {
             // Enrich error event with HoneyDrunk context
             enricher.EnrichErrorEvent(errorEvent, sourceName);
+            errorEvent = TelemetryRedactor.RedactErrorEvent(errorEvent);
 
             if (errorSink is not null && _options.EnableSentrySink)
             {
                 await errorSink.CaptureAsync(errorEvent, cancellationToken).ConfigureAwait(false);
             }
 
-            LogErrorEventProcessed(errorEvent.Message ?? "Exception");
+            LogErrorEventProcessed();
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
-            LogSentryRoutingError(ex);
+            LogSentryRoutingError(ex.GetType().Name);
             CollectorTelemetry.RecordError("sentry_routing");
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetStatus(ActivityStatusCode.Error, TelemetryRedactor.RedactText(ex.Message));
 
             // Don't rethrow - we don't want sink failures to break ingestion
         }
@@ -449,6 +465,7 @@ public sealed partial class IngestionPipeline(
         string contentType,
         CancellationToken cancellationToken)
     {
+        data = OtlpPayloadRedactor.RedactTraces(data, contentType);
         var failures = 0;
 
         foreach (var sink in _traceSinks)
@@ -459,7 +476,7 @@ public sealed partial class IngestionPipeline(
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
-                LogTraceSinkForwardingFailed(ex);
+                LogTraceSinkForwardingFailed(ex.GetType().Name);
                 failures++;
             }
         }
@@ -476,6 +493,7 @@ public sealed partial class IngestionPipeline(
         string contentType,
         CancellationToken cancellationToken)
     {
+        data = OtlpPayloadRedactor.RedactMetrics(data, contentType);
         var failures = 0;
 
         foreach (var sink in _metricsSinks)
@@ -486,7 +504,7 @@ public sealed partial class IngestionPipeline(
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
-                LogMetricsSinkForwardingFailed(ex);
+                LogMetricsSinkForwardingFailed(ex.GetType().Name);
                 failures++;
             }
         }
@@ -504,6 +522,7 @@ public sealed partial class IngestionPipeline(
         int maxSeverityNumber,
         CancellationToken cancellationToken)
     {
+        data = OtlpPayloadRedactor.RedactLogs(data, contentType);
         var failures = 0;
 
         foreach (var sink in _logSinks)
@@ -528,7 +547,7 @@ public sealed partial class IngestionPipeline(
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
-                LogLogsSinkForwardingFailed(ex);
+                LogLogsSinkForwardingFailed(ex.GetType().Name);
                 failures++;
             }
         }
@@ -596,7 +615,9 @@ public sealed partial class IngestionPipeline(
         // Add enrichment metadata
         foreach (var kvp in metadata)
         {
-            ingestionEvent.Metadata[kvp.Key] = kvp.Value;
+            ingestionEvent.Metadata[kvp.Key] = TelemetryRedactor.IsSensitiveKey(kvp.Key)
+                ? TelemetryRedactor.RedactedValue
+                : TelemetryRedactor.RedactText(kvp.Value) ?? string.Empty;
         }
 
         try
@@ -605,7 +626,7 @@ public sealed partial class IngestionPipeline(
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
-            LogTransportPublishFailed(ex, sourceName);
+            LogTransportPublishFailed(ex.GetType().Name, sourceName);
             CollectorTelemetry.RecordError("transport_publish");
         }
     }
@@ -657,7 +678,9 @@ public sealed partial class IngestionPipeline(
                 {
                     // Limit tag key length and sanitize
                     var key = attr.Key.Length > 32 ? attr.Key[..32] : attr.Key;
-                    errorEvent.Tags[key] = attr.Value;
+                    errorEvent.Tags[key] = TelemetryRedactor.IsSensitiveKey(attr.Key)
+                        ? TelemetryRedactor.RedactedValue
+                        : TelemetryRedactor.RedactText(attr.Value) ?? string.Empty;
                 }
 
                 // Add exception details to extra data
@@ -679,15 +702,16 @@ public sealed partial class IngestionPipeline(
                 // Apply enrichment with HoneyDrunk context
                 enricher.EnrichErrorEvent(errorEvent, errorSpan.ServiceName);
 
+                errorEvent = TelemetryRedactor.RedactErrorEvent(errorEvent);
                 await errorSink!.CaptureAsync(errorEvent, cancellationToken).ConfigureAwait(false);
 
-                CollectorTelemetry.RecordErrorForwarded(errorSpan.ServiceName, tenantId);
+                CollectorTelemetry.RecordErrorForwarded(TelemetryRedactor.RedactText(errorSpan.ServiceName), tenantId);
 
-                LogErrorSpanForwarded(errorSpan.SpanName, errorSpan.ServiceName ?? UnknownSource);
+                LogErrorSpanForwarded(TelemetryRedactor.RedactText(errorSpan.SpanName) ?? UnknownSource, TelemetryRedactor.RedactText(errorSpan.ServiceName) ?? UnknownSource);
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
-                LogErrorSpanForwardingFailed(ex, errorSpan.SpanName);
+                LogErrorSpanForwardingFailed(ex.GetType().Name);
             }
         }
     }
@@ -743,7 +767,9 @@ public sealed partial class IngestionPipeline(
                 foreach (var attr in errorLog.Attributes)
                 {
                     var key = attr.Key.Length > 32 ? attr.Key[..32] : attr.Key;
-                    errorEvent.Tags[key] = attr.Value;
+                    errorEvent.Tags[key] = TelemetryRedactor.IsSensitiveKey(attr.Key)
+                        ? TelemetryRedactor.RedactedValue
+                        : TelemetryRedactor.RedactText(attr.Value) ?? string.Empty;
                 }
 
                 // Add exception details if present
@@ -765,15 +791,16 @@ public sealed partial class IngestionPipeline(
                 // Apply enrichment with HoneyDrunk context
                 enricher.EnrichErrorEvent(errorEvent, sourceName ?? errorLog.ServiceName);
 
+                errorEvent = TelemetryRedactor.RedactErrorEvent(errorEvent);
                 await errorSink!.CaptureAsync(errorEvent, cancellationToken).ConfigureAwait(false);
 
-                CollectorTelemetry.RecordErrorForwarded(sourceName ?? errorLog.ServiceName, tenantId);
+                CollectorTelemetry.RecordErrorForwarded(TelemetryRedactor.RedactText(sourceName ?? errorLog.ServiceName), tenantId);
 
-                LogErrorLogForwarded(errorLog.SeverityText ?? "ERROR", sourceName ?? errorLog.ServiceName ?? UnknownSource);
+                LogErrorLogForwarded(TelemetryRedactor.RedactText(errorLog.SeverityText) ?? "ERROR", TelemetryRedactor.RedactText(sourceName ?? errorLog.ServiceName) ?? UnknownSource);
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
-                LogErrorLogForwardingFailed(ex, errorLog.Message ?? "Error log");
+                LogErrorLogForwardingFailed(ex.GetType().Name);
             }
         }
     }

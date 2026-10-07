@@ -64,6 +64,9 @@ public class Program
         builder.Configuration.GetSection(PulseCollectorOptions.SectionName).Bind(collectorOptions);
         builder.Services.AddSingleton(Options.Create(collectorOptions));
 
+        // Reject unsafe or incomplete ingestion authentication before starting the collector.
+        builder.ConfigureOtlpAuthentication(collectorOptions);
+
         // Validate and get OTLP endpoint (fail-fast in non-Development if missing/localhost)
         var otlpEndpoint = builder.GetValidatedOtlpEndpoint();
 
@@ -160,15 +163,24 @@ public class Program
         // Validate sink endpoints (fail-fast in production if missing)
         app.ValidateSinkEndpoints(collectorOptions);
 
+        // Apply one policy to every ingestion protocol, without changing health or Vault webhook auth.
+        var ingestionEndpoints = app.MapGroup(string.Empty);
+        if (collectorOptions.RequireOtlpAuthentication)
+        {
+            app.UseAuthentication();
+            app.UseAuthorization();
+            ingestionEndpoints.RequireAuthorization(OtlpAuthenticationExtensions.PolicyName);
+        }
+
         // Map endpoints
         app.MapHealthEndpoints();
-        app.MapOtlpEndpoints();
+        ingestionEndpoints.MapOtlpEndpoints();
         app.MapVaultInvalidationWebhook("/internal/vault/invalidate");
 
         // Map gRPC OTLP services
-        app.MapGrpcService<OtlpTraceService>();
-        app.MapGrpcService<OtlpMetricsService>();
-        app.MapGrpcService<OtlpLogsService>();
+        ingestionEndpoints.MapGrpcService<OtlpTraceService>();
+        ingestionEndpoints.MapGrpcService<OtlpMetricsService>();
+        ingestionEndpoints.MapGrpcService<OtlpLogsService>();
 
         await app.RunAsync().ConfigureAwait(false);
     }
