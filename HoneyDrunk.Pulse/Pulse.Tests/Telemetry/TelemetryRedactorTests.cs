@@ -7,6 +7,7 @@ using HoneyDrunk.Telemetry.Abstractions.Models;
 using HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 
 namespace HoneyDrunk.Pulse.Tests.Telemetry;
@@ -51,7 +52,6 @@ public sealed class TelemetryRedactorTests
     [InlineData("Contact somebody@example.test for details", "somebody@example.test")]
     [InlineData("phone: +1 (555) 123-4567", "555")]
     [InlineData("https://user:hidden@example.test/path", "hidden")]
-    [InlineData("Basic dXNlcjpwYXNz", "dXNlcjpwYXNz")]
     [InlineData("client_secret=client-value", "client-value")]
     public void RedactText_KnownPattern_RemovesValue(string text, string sensitiveValue)
     {
@@ -59,6 +59,23 @@ public sealed class TelemetryRedactorTests
 
         result.Should().NotContain(sensitiveValue);
         result.Should().Contain(TelemetryRedactor.RedactedValue);
+        TelemetryRedactor.RedactText(result).Should().Be(result);
+    }
+
+    /// <summary>
+    /// Basic authentication is redacted using clearly dummy credentials generated only for this test.
+    /// </summary>
+    [Fact]
+    public void RedactText_RuntimeDummyBasicHeader_RemovesEncodedCredentials()
+    {
+        var dummyCredentials = $"dummy-user-{Guid.NewGuid():N}:dummy-password-{Guid.NewGuid():N}";
+        var encodedCredentials = Convert.ToBase64String(Encoding.UTF8.GetBytes(dummyCredentials));
+        var header = $"Basic {encodedCredentials}";
+
+        var result = TelemetryRedactor.RedactText(header);
+
+        result.Should().Be(TelemetryRedactor.RedactedValue);
+        result.Should().NotContain(encodedCredentials);
         TelemetryRedactor.RedactText(result).Should().Be(result);
     }
 
