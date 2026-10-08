@@ -4,6 +4,7 @@
 
 using Google.Protobuf;
 using Grpc.Core;
+using HoneyDrunk.Pulse.Collector.Endpoints;
 using HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
 using OpenTelemetry.Proto.Collector.Metrics.V1;
 
@@ -81,7 +82,8 @@ public sealed class OtlpMetricsService(
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogError("Error processing gRPC OTLP metrics ({ExceptionType})", ex.GetType().Name);
+            // Reuse the structured request logger without passing payload-bearing exceptions.
+            logger.LogMetricsRequestError(ex.GetType().Name);
             throw new RpcException(new Status(StatusCode.Internal, "Error processing metrics"));
         }
     }

@@ -17,7 +17,7 @@ namespace HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
 /// This is defense in depth, not a guarantee that arbitrary unlabeled secrets can be recognized.
 /// Unsupported objects, excessive nesting, and oversized values are replaced rather than serialized.
 /// </remarks>
-public static partial class TelemetryRedactor
+public static class TelemetryRedactor
 {
     /// <summary>
     /// The replacement used for sensitive or unsafe-to-inspect values.
@@ -30,6 +30,17 @@ public static partial class TelemetryRedactor
     private const int MaximumExceptionFrames = 128;
     private const string SensitiveFieldPattern = @"(?:password|passwd|pwd|(?:access[_. -]?|refresh[_. -]?|id[_. -]?)?token|api[_. -]?key|authorization|cookie|(?:client[_. -]?)?secret|connection[_. -]?string|e[_. -]?mail(?:[_. -]?address)?|phone(?:[_. -]?number)?)";
     private const RegexOptions PatternOptions = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking;
+
+    // NonBacktracking uses the runtime engine; source generation would only cache these instances.
+    private static readonly Regex WholeFieldPattern = new(@"(?<key>\b(?:authorization|proxy[_. -]?authorization|(?:set[_. -]?)?cookie|connection[_. -]?string|phone(?:[_. -]?number)?)[""']?\s*[:=]\s*)(?:\[REDACTED\]|""(?:\\.|[^""\\])*""|'(?:\\.|[^'\\])*'|[^\r\n]+)", PatternOptions, TimeSpan.FromMilliseconds(100));
+
+    private static readonly Regex CredentialPattern = new(@"(?<key>\b" + SensitiveFieldPattern + @"[""']?\s*[:=]\s*)(?:\[REDACTED\]|""(?:\\.|[^""\\])*""|'(?:\\.|[^'\\])*'|[^\s,;\]\}&]+)", PatternOptions, TimeSpan.FromMilliseconds(100));
+
+    private static readonly Regex AuthorizationPattern = new(@"\b(?:Bearer|Basic)\s+[a-z0-9._~+/=\-]+", PatternOptions, TimeSpan.FromMilliseconds(100));
+
+    private static readonly Regex UrlCredentialPattern = new(@"(?<scheme>[a-z][a-z0-9+.\-]*://)[^/\s:@]+:[^/\s@]+@", PatternOptions, TimeSpan.FromMilliseconds(100));
+
+    private static readonly Regex EmailPattern = new(@"[a-z0-9.!#$%&'*+/=?^_`{|}~\-]+@[a-z0-9\-]+(?:\.[a-z0-9\-]+)+", PatternOptions, TimeSpan.FromMilliseconds(100));
 
     private static readonly string[] SensitiveFieldMarkers =
     [
@@ -73,11 +84,11 @@ public static partial class TelemetryRedactor
 
         try
         {
-            var redacted = WholeFieldPattern().Replace(value, "${key}" + RedactedValue);
-            redacted = CredentialPattern().Replace(redacted, "${key}" + RedactedValue);
-            redacted = AuthorizationPattern().Replace(redacted, RedactedValue);
-            redacted = UrlCredentialPattern().Replace(redacted, "${scheme}" + RedactedValue + "@");
-            return EmailPattern().Replace(redacted, RedactedValue);
+            var redacted = WholeFieldPattern.Replace(value, "${key}" + RedactedValue);
+            redacted = CredentialPattern.Replace(redacted, "${key}" + RedactedValue);
+            redacted = AuthorizationPattern.Replace(redacted, RedactedValue);
+            redacted = UrlCredentialPattern.Replace(redacted, "${scheme}" + RedactedValue + "@");
+            return EmailPattern.Replace(redacted, RedactedValue);
         }
         catch (RegexMatchTimeoutException)
         {
@@ -167,21 +178,6 @@ public static partial class TelemetryRedactor
         return RedactValue(key, value, 0, ref remaining, ref redacted);
     }
 
-    [GeneratedRegex(@"(?<key>\b(?:authorization|proxy[_. -]?authorization|(?:set[_. -]?)?cookie|connection[_. -]?string|phone(?:[_. -]?number)?)[""']?\s*[:=]\s*)(?:\[REDACTED\]|""(?:\\.|[^""\\])*""|'(?:\\.|[^'\\])*'|[^\r\n]+)", PatternOptions, 100)]
-    private static partial Regex WholeFieldPattern();
-
-    [GeneratedRegex(@"(?<key>\b" + SensitiveFieldPattern + @"[""']?\s*[:=]\s*)(?:\[REDACTED\]|""(?:\\.|[^""\\])*""|'(?:\\.|[^'\\])*'|[^\s,;\]\}&]+)", PatternOptions, 100)]
-    private static partial Regex CredentialPattern();
-
-    [GeneratedRegex(@"\b(?:Bearer|Basic)\s+[a-z0-9._~+/=\-]+", PatternOptions, 100)]
-    private static partial Regex AuthorizationPattern();
-
-    [GeneratedRegex(@"(?<scheme>[a-z][a-z0-9+.\-]*://)[^/\s:@]+:[^/\s@]+@", PatternOptions, 100)]
-    private static partial Regex UrlCredentialPattern();
-
-    [GeneratedRegex(@"[a-z0-9.!#$%&'*+/=?^_`{|}~\-]+@[a-z0-9\-]+(?:\.[a-z0-9\-]+)+", PatternOptions, 100)]
-    private static partial Regex EmailPattern();
-
     private static List<Dictionary<string, object?>> GetExceptionFrames(Exception exception)
     {
         var result = new List<Dictionary<string, object?>>();
@@ -245,31 +241,9 @@ public static partial class TelemetryRedactor
             case JsonElement json:
                 return RedactJson(json, depth, ref remaining, ref redacted);
             case IEnumerable<KeyValuePair<string, object?>> properties:
-                var fields = new Dictionary<string, object?>(StringComparer.Ordinal);
-                foreach (var property in properties)
-                {
-                    if (remaining <= 0)
-                    {
-                        return ReplaceValue(ref redacted);
-                    }
-
-                    fields[RedactText(property.Key, ref redacted) ?? string.Empty] = RedactValue(property.Key, property.Value, depth + 1, ref remaining, ref redacted);
-                }
-
-                return fields;
+                return RedactProperties(properties, depth, ref remaining, ref redacted);
             case IDictionary dictionary:
-                var entries = new Dictionary<string, object?>(StringComparer.Ordinal);
-                foreach (DictionaryEntry entry in dictionary)
-                {
-                    if (remaining <= 0 || entry.Key is not string entryKey)
-                    {
-                        return ReplaceValue(ref redacted);
-                    }
-
-                    entries[RedactText(entryKey, ref redacted) ?? string.Empty] = RedactValue(entryKey, entry.Value, depth + 1, ref remaining, ref redacted);
-                }
-
-                return entries;
+                return RedactDictionary(dictionary, depth, ref remaining, ref redacted);
             case Array array when array.GetType().GetElementType() is { } elementType
                 && (elementType == typeof(bool) || elementType == typeof(int) || elementType == typeof(long)
                     || elementType == typeof(float) || elementType == typeof(double)):
@@ -281,19 +255,7 @@ public static partial class TelemetryRedactor
                 remaining -= array.Length;
                 return array.Clone();
             case IEnumerable sequence:
-                var items = new List<object?>();
-                foreach (var item in sequence)
-                {
-                    if (remaining <= 0)
-                    {
-                        return ReplaceValue(ref redacted);
-                    }
-
-                    items.Add(RedactValue(string.Empty, item, depth + 1, ref remaining, ref redacted));
-                }
-
-                // Preserve homogeneous string arrays for standard OTel attribute exporters.
-                return value is string[] ? items.Cast<string?>().ToArray() : items.ToArray();
+                return RedactSequence(sequence, depth, ref remaining, ref redacted);
             case bool or byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal:
             case DateTime or DateTimeOffset or TimeSpan or Guid:
                 return value;
@@ -301,6 +263,62 @@ public static partial class TelemetryRedactor
                 // Do not call ToString or serialize arbitrary objects that may contain private fields.
                 return ReplaceValue(ref redacted);
         }
+    }
+
+    private static object RedactProperties(IEnumerable<KeyValuePair<string, object?>> properties, int depth, ref int remaining, ref bool redacted)
+    {
+        var fields = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (var property in properties)
+        {
+            if (remaining <= 0)
+            {
+                return ReplaceValue(ref redacted);
+            }
+
+            fields[RedactText(property.Key, ref redacted) ?? string.Empty] = RedactValue(property.Key, property.Value, depth + 1, ref remaining, ref redacted);
+        }
+
+        return fields;
+    }
+
+    private static object RedactDictionary(IDictionary dictionary, int depth, ref int remaining, ref bool redacted)
+    {
+        var entries = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (DictionaryEntry entry in dictionary)
+        {
+            // Non-generic dictionaries must also reject keys that cannot be inspected safely.
+            if (remaining <= 0 || entry.Key is not string entryKey)
+            {
+                return ReplaceValue(ref redacted);
+            }
+
+            entries[RedactText(entryKey, ref redacted) ?? string.Empty] = RedactValue(entryKey, entry.Value, depth + 1, ref remaining, ref redacted);
+        }
+
+        return entries;
+    }
+
+    private static object RedactSequence(IEnumerable sequence, int depth, ref int remaining, ref bool redacted)
+    {
+        var items = new List<object?>();
+        foreach (var item in sequence)
+        {
+            if (remaining <= 0)
+            {
+                return ReplaceValue(ref redacted);
+            }
+
+            items.Add(RedactValue(string.Empty, item, depth + 1, ref remaining, ref redacted));
+        }
+
+        // Preserve homogeneous string arrays for standard OTel attribute exporters.
+        if (sequence is string[])
+        {
+            string?[] strings = [.. items.Cast<string?>()];
+            return strings;
+        }
+
+        return items.ToArray();
     }
 
     private static object? RedactJson(JsonElement value, int depth, ref int remaining, ref bool redacted)

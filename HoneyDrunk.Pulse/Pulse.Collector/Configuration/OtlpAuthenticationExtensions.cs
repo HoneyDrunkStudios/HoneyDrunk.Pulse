@@ -83,8 +83,8 @@ public static class OtlpAuthenticationExtensions
                 jwt.TokenValidationParameters.ClockSkew = TimeSpan.FromSeconds(30);
             });
 
-        builder.Services.AddAuthorization(authorization =>
-            authorization.AddPolicy(PolicyName, policy =>
-                policy.AddAuthenticationSchemes(SchemeName).RequireAuthenticatedUser()));
+        builder.Services.AddAuthorizationBuilder()
+            .AddPolicy(PolicyName, policy =>
+                policy.AddAuthenticationSchemes(SchemeName).RequireAuthenticatedUser());
     }
 }

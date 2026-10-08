@@ -33,13 +33,27 @@ public sealed class TelemetryRedactionProcessor : BaseProcessor<Activity>
             activityEvent = new ActivityEvent(
                 TelemetryRedactor.RedactText(activityEvent.Name) ?? string.Empty,
                 activityEvent.Timestamp,
-                new ActivityTagsCollection(activityEvent.Tags.Select(RedactTag)));
+                RedactTags(activityEvent.Tags));
         }
 
         foreach (ref var link in data.EnumerateLinks())
         {
-            link = new ActivityLink(link.Context, new ActivityTagsCollection(link.Tags?.Select(RedactTag) ?? []));
+            link = new ActivityLink(link.Context, RedactTags(link.Tags));
         }
+    }
+
+    private static ActivityTagsCollection RedactTags(IEnumerable<KeyValuePair<string, object?>>? tags)
+    {
+        ActivityTagsCollection result = [];
+        foreach (var tag in tags ?? [])
+        {
+            var redacted = RedactTag(tag);
+
+            // Match the enumerable constructor: collisions replace earlier values and null removes a key.
+            result[redacted.Key] = redacted.Value;
+        }
+
+        return result;
     }
 
     private static KeyValuePair<string, object?> RedactTag(KeyValuePair<string, object?> tag)

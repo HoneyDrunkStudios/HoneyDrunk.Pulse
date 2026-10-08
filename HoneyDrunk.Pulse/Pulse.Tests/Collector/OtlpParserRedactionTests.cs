@@ -13,11 +13,14 @@ namespace HoneyDrunk.Pulse.Tests.Collector;
 public sealed class OtlpParserRedactionTests
 {
     /// <summary>All OTLP parsers restrict local failure diagnostics to exception types.</summary>
+    /// <param name="loggingEnabled">Whether diagnostics are enabled.</param>
     /// <returns>The test task.</returns>
-    [Fact]
-    public async Task InvalidJson_DoesNotLogInputOrRawExceptions()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task InvalidJson_DoesNotLogInputOrRawExceptions(bool loggingEnabled)
     {
-        var logger = new CapturingLogger();
+        var logger = new CapturingLogger(loggingEnabled);
         var parser = new OtlpParser(logger);
         var payload = Encoding.UTF8.GetBytes("{\"password=private-sentinel\":{broken}");
         using var traces = new MemoryStream(payload);
@@ -28,12 +31,20 @@ public sealed class OtlpParserRedactionTests
         await parser.ParseLogsAsync(logs, "application/json");
         await parser.ParseMetricsAsync(metrics, "application/json");
 
-        logger.Messages.Should().NotBeEmpty();
-        logger.Messages.Should().NotContain(message => message.Contains("private-sentinel", StringComparison.Ordinal));
-        logger.Exceptions.Should().OnlyContain(exception => exception == null);
+        if (loggingEnabled)
+        {
+            logger.Messages.Should().NotBeEmpty();
+            logger.Messages.Should().NotContain(message => message.Contains("private-sentinel", StringComparison.Ordinal));
+            logger.Exceptions.Should().OnlyContain(exception => exception == null);
+        }
+        else
+        {
+            logger.Messages.Should().BeEmpty();
+            logger.Exceptions.Should().BeEmpty();
+        }
     }
 
-    private sealed class CapturingLogger : ILogger<OtlpParser>
+    private sealed class CapturingLogger(bool loggingEnabled) : ILogger<OtlpParser>
     {
         public List<string> Messages { get; } = [];
 
@@ -42,7 +53,7 @@ public sealed class OtlpParserRedactionTests
         public IDisposable? BeginScope<TState>(TState state)
             where TState : notnull => null;
 
-        public bool IsEnabled(LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel) => loggingEnabled;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {

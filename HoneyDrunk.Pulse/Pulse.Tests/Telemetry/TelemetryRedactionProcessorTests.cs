@@ -21,6 +21,9 @@ namespace HoneyDrunk.Pulse.Tests.Telemetry;
 /// </summary>
 public sealed class TelemetryRedactionProcessorTests
 {
+    private static readonly long[] SafeNumbers = [1, 2];
+    private static readonly string[] SafeLabels = ["east", "west"];
+
     /// <summary>
     /// Exported spans have sanitized duplicate tags, events, links, names, and status text.
     /// </summary>
@@ -67,6 +70,45 @@ public sealed class TelemetryRedactionProcessorTests
         JsonSerializer.Serialize(activity.Events.Single().Tags).Should().NotContain("event-sensitive").And.NotContain("stack@example.test");
         activity.Links.Single().Context.Should().Be(linkContext);
         activity.Links.Single().Tags.Should().Contain(tag => tag.Key == "api_key" && Equals(tag.Value, TelemetryRedactor.RedactedValue));
+    }
+
+    /// <summary>
+    /// Redacted event and link keys retain last-value-wins and null-removal behavior.
+    /// </summary>
+    /// <param name="lastValue">The final value for keys that redact to the same name.</param>
+    [Theory]
+    [InlineData("last")]
+    [InlineData(null)]
+    public void TraceProcessor_EventAndLinkTags_PreservesDuplicateAndNullSemantics(string? lastValue)
+    {
+        // Add retains null values so the processor must apply the constructor's indexer semantics.
+        ActivityTagsCollection tags =
+        [
+            new("first@example.test", "first"),
+            new("second@example.test", lastValue),
+            new("safe", "retained"),
+            new("empty", null),
+        ];
+        using var activity = new Activity("tag-collection-test");
+        activity.Start();
+        activity.AddEvent(new ActivityEvent("event", tags: tags));
+        activity.AddLink(new ActivityLink(default, tags));
+        using var processor = new TelemetryRedactionProcessor();
+        var expected = new Dictionary<string, object?> { ["safe"] = "retained" };
+        if (lastValue is not null)
+        {
+            expected[TelemetryRedactor.RedactedValue] = lastValue;
+        }
+
+        activity.Stop();
+        processor.OnEnd(activity);
+
+        activity.Events.Single().Tags.Should().BeEquivalentTo(expected);
+        activity.Links.Single().Tags.Should().BeEquivalentTo(expected);
+        tags.Should().HaveCount(4);
+        tags.Should().Contain(tag => tag.Key == "empty" && tag.Value == null);
+        tags["first@example.test"].Should().Be("first");
+        tags["second@example.test"].Should().Be(lastValue);
     }
 
     /// <summary>
@@ -138,8 +180,8 @@ public sealed class TelemetryRedactionProcessorTests
         using var json = JsonDocument.Parse("{\"count\":2,\"labels\":[\"east\",\"west\"]}");
         var attributes = new List<KeyValuePair<string, object?>>
         {
-            new("Numbers", new long[] { 1, 2 }),
-            new("Labels", new[] { "east", "west" }),
+            new("Numbers", SafeNumbers),
+            new("Labels", SafeLabels),
             new("Payload", new Dictionary<string, object?> { ["plan"] = "standard" }),
             new("Json", json.RootElement),
             new("{OriginalFormat}", "Numbers {Numbers}; labels {Labels}; payload {Payload}"),
@@ -149,6 +191,8 @@ public sealed class TelemetryRedactionProcessorTests
         factory.CreateLogger("redaction-test").Log(LogLevel.Information, default, attributes, null, (_, _) => expected);
 
         formattedMessage.Should().Be(expected);
+        SafeNumbers.Should().Equal(1, 2);
+        SafeLabels.Should().Equal("east", "west");
     }
 
     /// <summary>
@@ -176,8 +220,8 @@ public sealed class TelemetryRedactionProcessorTests
             options.AddProcessor(exportProcessor);
         }));
         object collection = nestedDictionary
-            ? new object?[] { new Dictionary<string, object?> { ["password"] = "array-sensitive" } }
-            : new[] { "benign", "token=array-sensitive" };
+            ? (object?[])[new Dictionary<string, object?> { ["password"] = "array-sensitive" }]
+            : (string[])["benign", "token=array-sensitive"];
         var attributes = new List<KeyValuePair<string, object?>>
         {
             new("Payload", collection),

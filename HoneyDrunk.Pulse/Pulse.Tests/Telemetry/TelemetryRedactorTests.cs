@@ -5,6 +5,7 @@
 using AwesomeAssertions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
 using HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -123,14 +124,60 @@ public sealed class TelemetryRedactorTests
     public void RedactValue_StandardArrays_PreservesTypesAndCopiesValues()
     {
         var original = new long[] { 1, 2, 3 };
-        var strings = new[] { "benign", "person@example.test" };
+        string?[] strings = ["benign", null, "person@example.test"];
 
         var numericResult = TelemetryRedactor.RedactValue("durations", original);
         var stringResult = TelemetryRedactor.RedactValue("labels", strings);
 
         numericResult.Should().BeOfType<long[]>().Which.Should().Equal(original).And.NotBeSameAs(original);
-        stringResult.Should().BeOfType<string[]>().Which.Should().Equal("benign", TelemetryRedactor.RedactedValue);
-        strings[1].Should().Be("person@example.test");
+        stringResult.Should().BeOfType<string?[]>().Which.Should().Equal("benign", null, TelemetryRedactor.RedactedValue).And.NotBeSameAs(strings);
+        strings[2].Should().Be("person@example.test");
+    }
+
+    /// <summary>
+    /// Non-generic dictionaries retain safe values while copying and redacting their entries.
+    /// </summary>
+    [Fact]
+    public void RedactValue_NonGenericDictionary_CopiesAndSanitizesEntries()
+    {
+        var original = new Hashtable
+        {
+            ["password"] = "dictionary-sensitive",
+            ["count"] = 2,
+        };
+
+        var result = TelemetryRedactor.RedactValue("payload", original).Should()
+            .BeOfType<Dictionary<string, object?>>().Which;
+
+        result["password"].Should().Be(TelemetryRedactor.RedactedValue);
+        result["count"].Should().Be(2);
+        original["password"].Should().Be("dictionary-sensitive");
+    }
+
+    /// <summary>
+    /// Non-string dictionary keys cannot bypass inspection by being converted to text.
+    /// </summary>
+    [Fact]
+    public void RedactValue_NonStringDictionaryKey_FailsClosed()
+    {
+        var original = new Hashtable { [42] = "uninspectable-value" };
+
+        TelemetryRedactor.RedactValue("payload", original).Should().Be(TelemetryRedactor.RedactedValue);
+        original[42].Should().Be("uninspectable-value");
+    }
+
+    /// <summary>
+    /// Numeric arrays consume the same bounded value budget as enumerated collections.
+    /// </summary>
+    [Fact]
+    public void RedactValue_NumericArray_EnforcesValueBudget()
+    {
+        var allowed = new long[1023];
+        var oversized = new long[1024];
+
+        TelemetryRedactor.RedactValue("payload", allowed).Should().BeOfType<long[]>()
+            .Which.Should().Equal(allowed).And.NotBeSameAs(allowed);
+        TelemetryRedactor.RedactValue("payload", oversized).Should().Be(TelemetryRedactor.RedactedValue);
     }
 
     /// <summary>

@@ -84,6 +84,8 @@ public static class OtlpPayloadRedactor
         ValidateDepth(depth);
         if (message is KeyValue attribute && TelemetryRedactor.IsSensitiveKey(attribute.Key))
         {
+            // Keys are producer-controlled text too; the fast path must sanitize both sides.
+            attribute.Key = TelemetryRedactor.RedactText(attribute.Key) ?? string.Empty;
             attribute.Value = new AnyValue { StringValue = TelemetryRedactor.RedactedValue };
             return;
         }
@@ -122,26 +124,31 @@ public static class OtlpPayloadRedactor
         ValidateDepth(depth);
         if (node is JsonArray array)
         {
-            for (var index = 0; index < array.Count; index++)
-            {
-                if (array[index] is JsonValue value && value.TryGetValue<string>(out var text))
-                {
-                    array[index] = TelemetryRedactor.RedactText(text);
-                }
-                else if (array[index] is { } child)
-                {
-                    RedactJson(child, depth + 1);
-                }
-            }
-
-            return;
+            RedactJsonArray(array, depth);
         }
-
-        if (node is not JsonObject obj)
+        else if (node is JsonObject obj)
         {
-            return;
+            RedactJsonObject(obj, depth);
         }
+    }
 
+    private static void RedactJsonArray(JsonArray array, int depth)
+    {
+        for (var index = 0; index < array.Count; index++)
+        {
+            if (array[index] is JsonValue value && value.TryGetValue<string>(out var text))
+            {
+                array[index] = TelemetryRedactor.RedactText(text);
+            }
+            else if (array[index] is { } child)
+            {
+                RedactJson(child, depth + 1);
+            }
+        }
+    }
+
+    private static void RedactJsonObject(JsonObject obj, int depth)
+    {
         if (obj["key"] is JsonValue key && key.TryGetValue<string>(out var attributeKey)
             && TelemetryRedactor.IsSensitiveKey(attributeKey))
         {

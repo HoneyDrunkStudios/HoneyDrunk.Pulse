@@ -44,6 +44,22 @@ public class OtlpPayloadRedactorTests
         json.RootElement.ValueKind.Should().Be(JsonValueKind.Object);
     }
 
+    /// <summary>Sanitizes mixed nested arrays without changing safe scalars or text whitespace.</summary>
+    [Fact]
+    public void Json_RedactsMixedArraysAndPreservesSafeValues()
+    {
+        const string payload = """
+            {"unknownValues":[" reader@example.test ",null,7,true,["safe",{"note":"  keep spaces  ","email":"private-value","nested":null}]]}
+            """;
+        const string expected = """
+            {"unknownValues":[" [REDACTED] ",null,7,true,["safe",{"note":"  keep spaces  ","email":"[REDACTED]","nested":null}]]}
+            """;
+
+        var output = Encoding.UTF8.GetString(OtlpPayloadRedactor.RedactLogs(Encoding.UTF8.GetBytes(payload), "application/json").Span);
+
+        output.Should().Be(expected);
+    }
+
     /// <summary>Redacts resource, scope, event and link attributes in protobuf traces.</summary>
     [Fact]
     public void ProtobufTraces_RedactsAllAttributeLocations()
@@ -154,6 +170,36 @@ public class OtlpPayloadRedactorTests
         var payload = string.Concat(Enumerable.Repeat("{\"nested\":", 40)) + "0" + new string('}', 40);
         var act = () => OtlpPayloadRedactor.RedactLogs(Encoding.UTF8.GetBytes(payload), "application/json");
         act.Should().Throw<InvalidDataException>();
+    }
+
+    /// <summary>Sensitive protobuf keys are sanitized without changing benign attributes or repeated output.</summary>
+    [Fact]
+    public void ProtobufTraces_RedactsSensitiveKeyTextAndRemainsIdempotent()
+    {
+        var resource = new ResourceSpans { Resource = new Resource() };
+        resource.Resource.Attributes.Add(new KeyValue
+        {
+            Key = "api.key=synthetic-key-content",
+            Value = new AnyValue { StringValue = "private-value" },
+        });
+        resource.Resource.Attributes.Add(new KeyValue
+        {
+            Key = "service.name",
+            Value = new AnyValue { StringValue = "sample-service" },
+        });
+        var request = new ExportTraceServiceRequest();
+        request.ResourceSpans.Add(resource);
+
+        var once = OtlpPayloadRedactor.RedactTraces(request.ToByteArray(), "application/x-protobuf");
+        var twice = OtlpPayloadRedactor.RedactTraces(once, "application/x-protobuf");
+        var attributes = ExportTraceServiceRequest.Parser.ParseFrom(once.Span).ResourceSpans[0].Resource.Attributes;
+
+        attributes[0].Key.Should().Be("api.key=[REDACTED]");
+        attributes[0].Value.StringValue.Should().Be("[REDACTED]");
+        attributes[1].Key.Should().Be("service.name");
+        attributes[1].Value.StringValue.Should().Be("sample-service");
+        twice.ToArray().Should().Equal(once.ToArray());
+        resource.Resource.Attributes[0].Key.Should().Be("api.key=synthetic-key-content");
     }
 
     private static KeyValue Secret() => new() { Key = "api.key", Value = new AnyValue { StringValue = "private-secret" } };

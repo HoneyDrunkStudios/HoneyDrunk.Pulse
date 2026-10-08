@@ -342,7 +342,7 @@ public sealed partial class IngestionPipeline(
 
             // Enrichment can add context from headers or the current operation.
             // Apply the policy after enrichment as well as copying caller-owned events.
-            eventList = eventList.Select(TelemetryRedactor.RedactTelemetryEvent).ToList();
+            eventList = [.. eventList.Select(TelemetryRedactor.RedactTelemetryEvent)];
 
             if (analyticsSink is not null && _options.EnablePostHogSink)
             {
@@ -707,7 +707,10 @@ public sealed partial class IngestionPipeline(
 
                 CollectorTelemetry.RecordErrorForwarded(TelemetryRedactor.RedactText(errorSpan.ServiceName), tenantId);
 
-                LogErrorSpanForwarded(TelemetryRedactor.RedactText(errorSpan.SpanName) ?? UnknownSource, TelemetryRedactor.RedactText(errorSpan.ServiceName) ?? UnknownSource);
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    LogErrorSpanForwarded(TelemetryRedactor.RedactText(errorSpan.SpanName) ?? UnknownSource, TelemetryRedactor.RedactText(errorSpan.ServiceName) ?? UnknownSource);
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
@@ -796,7 +799,10 @@ public sealed partial class IngestionPipeline(
 
                 CollectorTelemetry.RecordErrorForwarded(TelemetryRedactor.RedactText(sourceName ?? errorLog.ServiceName), tenantId);
 
-                LogErrorLogForwarded(TelemetryRedactor.RedactText(errorLog.SeverityText) ?? "ERROR", TelemetryRedactor.RedactText(sourceName ?? errorLog.ServiceName) ?? UnknownSource);
+                if (logger.IsEnabled(LogLevel.Debug))
+                {
+                    LogErrorLogForwarded(TelemetryRedactor.RedactText(errorLog.SeverityText) ?? "ERROR", TelemetryRedactor.RedactText(sourceName ?? errorLog.ServiceName) ?? UnknownSource);
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
             {
