@@ -89,7 +89,7 @@
 
 | Endpoint | Protocol | Content-Types | Auth (Phase 1) |
 |---|---|---|---|
-| `/otlp/v1/traces` | HTTP POST | `application/x-protobuf`, `application/json` | Optional (`RequireOtlpAuthentication`) |
+| `/otlp/v1/traces` | HTTP POST | `application/x-protobuf`, `application/json` | JWT bearer when `RequireOtlpAuthentication` is enabled; anonymous non-Development startup requires explicit opt-out |
 | `/otlp/v1/metrics` | HTTP POST | `application/x-protobuf`, `application/json` | Same |
 | `/otlp/v1/logs` | HTTP POST | `application/x-protobuf`, `application/json` | Same |
 | `/otlp/v1/analytics` | HTTP POST | `application/json` | Same |
@@ -619,7 +619,7 @@ This is a **Phase 1 behavioral gap**. The current behavior means:
 | Payload transformation / attribute mutation on pass-through | Raw OTLP bytes forwarded as-is to Tempo/Loki/Mimir. Enrichment applies to `PulseIngested` metadata, not to the forwarded OTLP stream. |
 | OTLP Exporter aggregation (delta → cumulative) | Not a collector responsibility. |
 | Sampling/tail-sampling | Out of scope — sampling is producer-side via OTEL SDK. |
-| Authentication / mTLS on OTLP endpoints | `RequireOtlpAuthentication` option exists but is not enforced in Phase 1. |
+| Ingress mTLS / tenant authorization | JWT bearer authentication is enforced on all HTTP and gRPC ingestion endpoints when enabled. Anonymous non-Development startup requires explicit opt-out; see [ingestion authentication](../Pulse.Collector/README.md#ingestion-authentication). mTLS and tenant-specific authorization are not implemented by the collector. |
 | Health probes that check sink connectivity | Static 200s only. Dynamic health requires per-sink health contributors (post-Phase-1). |
 | `MaxBatchSize` enforcement at intake | Option exists but is not gated. Risk accepted. |
 | Multi-tenant isolation within Collector | Single-tenant for Phase 1. `TenantId` flows through as metadata but no per-tenant routing. |

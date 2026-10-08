@@ -109,9 +109,13 @@ public static class OtlpEndpoints
                 ErrorCount = result.ErrorSpans.Count,
             });
         }
+        catch (InvalidDataException)
+        {
+            return Results.BadRequest(new { Error = "Invalid or unsupported OTLP payload" });
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogTracesRequestError(ex);
+            logger.LogTracesRequestError(ex.GetType().Name);
             return Results.Problem("Error processing traces", statusCode: 500);
         }
     }
@@ -152,9 +156,13 @@ public static class OtlpEndpoints
 
             return Results.Ok(new { Status = StatusAccepted, result.MetricCount, result.DataPointCount });
         }
+        catch (InvalidDataException)
+        {
+            return Results.BadRequest(new { Error = "Invalid or unsupported OTLP payload" });
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogMetricsRequestError(ex);
+            logger.LogMetricsRequestError(ex.GetType().Name);
             return Results.Problem("Error processing metrics", statusCode: 500);
         }
     }
@@ -203,9 +211,13 @@ public static class OtlpEndpoints
                 ErrorLogCount = result.ErrorLogs.Count,
             });
         }
+        catch (InvalidDataException)
+        {
+            return Results.BadRequest(new { Error = "Invalid or unsupported OTLP payload" });
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogLogsRequestError(ex);
+            logger.LogLogsRequestError(ex.GetType().Name);
             return Results.Problem("Error processing logs", statusCode: 500);
         }
     }
@@ -268,12 +280,12 @@ public static class OtlpEndpoints
         }
         catch (JsonException ex)
         {
-            logger.LogAnalyticsInvalidJson(ex);
+            logger.LogAnalyticsInvalidJson(ex.GetType().Name);
             return Results.BadRequest(new { Error = "Invalid JSON format" });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogAnalyticsRequestError(ex);
+            logger.LogAnalyticsRequestError(ex.GetType().Name);
             return Results.Problem("Error processing analytics events", statusCode: 500);
         }
     }
@@ -333,12 +345,12 @@ public static class OtlpEndpoints
         }
         catch (JsonException ex)
         {
-            logger.LogErrorReportInvalidJson(ex);
+            logger.LogErrorReportInvalidJson(ex.GetType().Name);
             return Results.BadRequest(new { Error = "Invalid JSON format" });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogErrorReportRequestError(ex);
+            logger.LogErrorReportRequestError(ex.GetType().Name);
             return Results.Problem("Error processing error report", statusCode: 500);
         }
     }

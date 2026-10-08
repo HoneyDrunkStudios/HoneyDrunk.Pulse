@@ -18,8 +18,8 @@ public sealed partial class OtlpParser
     [LoggerMessage(
         EventId = 101,
         Level = LogLevel.Error,
-        Message = "Failed to parse OTLP trace request")]
-    private partial void LogTraceParseError(Exception ex);
+        Message = "Failed to parse OTLP trace request ({ExceptionType})")]
+    private partial void LogTraceParseError(string exceptionType);
 
     [LoggerMessage(
         EventId = 102,
@@ -30,8 +30,8 @@ public sealed partial class OtlpParser
     [LoggerMessage(
         EventId = 103,
         Level = LogLevel.Error,
-        Message = "Failed to parse OTLP metrics request")]
-    private partial void LogMetricParseError(Exception ex);
+        Message = "Failed to parse OTLP metrics request ({ExceptionType})")]
+    private partial void LogMetricParseError(string exceptionType);
 
     [LoggerMessage(
         EventId = 104,
@@ -42,38 +42,38 @@ public sealed partial class OtlpParser
     [LoggerMessage(
         EventId = 105,
         Level = LogLevel.Error,
-        Message = "Failed to parse OTLP logs request")]
-    private partial void LogLogParseError(Exception ex);
+        Message = "Failed to parse OTLP logs request ({ExceptionType})")]
+    private partial void LogLogParseError(string exceptionType);
 
     [LoggerMessage(
         EventId = 106,
         Level = LogLevel.Debug,
-        Message = "Failed to parse OTLP JSON spans, falling back to heuristic")]
-    private partial void LogJsonSpanParseFallback(Exception ex);
+        Message = "Failed to parse OTLP JSON spans, falling back to heuristic ({ExceptionType})")]
+    private partial void LogJsonSpanParseFallback(string exceptionType);
 
     [LoggerMessage(
         EventId = 107,
         Level = LogLevel.Debug,
-        Message = "Failed to parse OTLP JSON metrics, falling back to heuristic")]
-    private partial void LogJsonMetricParseFallback(Exception ex);
+        Message = "Failed to parse OTLP JSON metrics, falling back to heuristic ({ExceptionType})")]
+    private partial void LogJsonMetricParseFallback(string exceptionType);
 
     [LoggerMessage(
         EventId = 108,
         Level = LogLevel.Debug,
-        Message = "Failed to parse OTLP JSON logs, falling back to heuristic")]
-    private partial void LogJsonLogParseFallback(Exception ex);
+        Message = "Failed to parse OTLP JSON logs, falling back to heuristic ({ExceptionType})")]
+    private partial void LogJsonLogParseFallback(string exceptionType);
 
     [LoggerMessage(
         EventId = 109,
         Level = LogLevel.Debug,
-        Message = "Failed to extract service names from OTLP JSON")]
-    private partial void LogServiceNameExtractionFailed(Exception ex);
+        Message = "Failed to extract service names from OTLP JSON ({ExceptionType})")]
+    private partial void LogServiceNameExtractionFailed(string exceptionType);
 
     [LoggerMessage(
         EventId = 110,
         Level = LogLevel.Debug,
-        Message = "Failed to extract error spans from OTLP JSON")]
-    private partial void LogErrorSpanExtractionFailed(Exception ex);
+        Message = "Failed to extract error spans from OTLP JSON ({ExceptionType})")]
+    private partial void LogErrorSpanExtractionFailed(string exceptionType);
 
     [LoggerMessage(
         EventId = 111,
@@ -84,20 +84,20 @@ public sealed partial class OtlpParser
     [LoggerMessage(
         EventId = 112,
         Level = LogLevel.Error,
-        Message = "Failed to parse OTLP traces from protobuf")]
-    private partial void LogProtobufTraceParseError(Exception ex);
+        Message = "Failed to parse OTLP traces from protobuf ({ExceptionType})")]
+    private partial void LogProtobufTraceParseError(string exceptionType);
 
     [LoggerMessage(
         EventId = 113,
         Level = LogLevel.Error,
-        Message = "Failed to parse OTLP logs from protobuf")]
-    private partial void LogProtobufLogParseError(Exception ex);
+        Message = "Failed to parse OTLP logs from protobuf ({ExceptionType})")]
+    private partial void LogProtobufLogParseError(string exceptionType);
 
     [LoggerMessage(
         EventId = 114,
         Level = LogLevel.Debug,
-        Message = "Failed to extract error logs")]
-    private partial void LogErrorLogExtractionFailed(Exception ex);
+        Message = "Failed to extract error logs ({ExceptionType})")]
+    private partial void LogErrorLogExtractionFailed(string exceptionType);
 
     [LoggerMessage(
         EventId = 115,

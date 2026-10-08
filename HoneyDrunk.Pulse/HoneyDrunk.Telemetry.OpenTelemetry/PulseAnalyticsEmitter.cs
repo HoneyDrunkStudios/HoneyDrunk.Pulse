@@ -4,6 +4,7 @@
 
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
+using HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
@@ -50,7 +51,7 @@ public sealed partial class PulseAnalyticsEmitter(
         {
             var request = new AnalyticsRequest
             {
-                Events = [.. eventsList.Select(e => new AnalyticsEventDto
+                Events = [.. eventsList.Select(TelemetryRedactor.RedactTelemetryEvent).Select(e => new AnalyticsEventDto
                 {
                     EventName = e.EventName,
                     Timestamp = e.Timestamp,

@@ -44,6 +44,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HoneyDrunk.Telemetry.Abstractions\HoneyDrunk.Telemetry.Abstractions.csproj" />
+    <InternalsVisibleTo Include="HoneyDrunk.Pulse.Tests" />
   </ItemGroup>
 
   <ItemGroup>

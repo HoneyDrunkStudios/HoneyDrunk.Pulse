@@ -14,6 +14,7 @@ using HoneyDrunk.Telemetry.Abstractions.Models;
 using HoneyDrunk.Transport.Abstractions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using System.Text;
 
 namespace HoneyDrunk.Pulse.Tests.Collector;
 
@@ -71,7 +72,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var failingTempoSink = new FailingTraceSink("Tempo connection refused");
         var successfulAzureMonitorSink = new SuccessfulTraceSink();
-        var rawOtlpData = new byte[] { 0x01, 0x02, 0x03 };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var pipeline = CreatePipeline(
             traceSinks: [failingTempoSink, successfulAzureMonitorSink],
@@ -118,7 +119,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var failingTempoSink = new FailingTraceSink("Tempo unavailable");
         var errorSink = new SuccessfulErrorSink();
-        var rawOtlpData = new byte[] { 0x01, 0x02, 0x03 };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var errorSpans = new List<ExtractedErrorSpan>
         {
@@ -165,7 +166,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var failingLokiSink = new FailingLogSink("Loki rate limit exceeded");
         var successfulAzureMonitorSink = new SuccessfulLogSink();
-        var rawOtlpData = new byte[] { 0x0A, 0x0B, 0x0C };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var pipeline = CreatePipeline(
             traceSinks: [],
@@ -210,7 +211,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var failingLokiSink = new FailingLogSink("Loki unavailable");
         var errorSink = new SuccessfulErrorSink();
-        var rawOtlpData = new byte[] { 0x0A, 0x0B };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var errorLogs = new List<ExtractedErrorLog>
         {
@@ -260,7 +261,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var successfulTempoSink = new SuccessfulTraceSink();
         var failingAzureMonitorSink = new FailingTraceSink("Azure Monitor 401 Unauthorized");
-        var rawOtlpData = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var pipeline = CreatePipeline(
             traceSinks: [successfulTempoSink, failingAzureMonitorSink],
@@ -297,7 +298,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var successfulMimirSink = new SuccessfulMetricsSink();
         var failingAzureMonitorSink = new FailingMetricsSink("Azure Monitor 503 Service Unavailable");
-        var rawOtlpData = new byte[] { 0xAA, 0xBB, 0xCC };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var pipeline = CreatePipeline(
             traceSinks: [],
@@ -331,7 +332,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var successfulLokiSink = new SuccessfulLogSink();
         var failingAzureMonitorSink = new FailingLogSink("Azure Monitor timeout");
-        var rawOtlpData = new byte[] { 0xDD, 0xEE, 0xFF };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var pipeline = CreatePipeline(
             traceSinks: [],
@@ -366,7 +367,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var failingTempoSink = new FailingTraceSink("Tempo down");
         var failingAzureMonitorSink = new FailingTraceSink("Azure Monitor down");
-        var rawOtlpData = new byte[] { 0x11, 0x22 };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var pipeline = CreatePipeline(
             traceSinks: [failingTempoSink, failingAzureMonitorSink],
@@ -415,7 +416,7 @@ public class SinkFailureScenarioTests
             logSinks: [failingLogSink],
             metricsSinks: [successfulMetricsSink]);
 
-        var rawOtlpData = new byte[] { 0x99 };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         // Act - Process traces (2 failures)
         await pipeline.ProcessTracesAsync(1, "svc", "n1", rawOtlpData: rawOtlpData, contentType: "application/x-protobuf");
@@ -477,7 +478,7 @@ public class SinkFailureScenarioTests
         // Arrange
         var successfulTempoSink = new SuccessfulTraceSink();
         var successfulAzureMonitorSink = new SuccessfulTraceSink();
-        var rawOtlpData = new byte[] { 0xAB, 0xCD };
+        var rawOtlpData = new byte[] { 0x0A, 0x00 }; // One empty OTLP resource.
 
         var pipeline = CreatePipeline(
             traceSinks: [successfulTempoSink, successfulAzureMonitorSink],
@@ -532,6 +533,41 @@ public class SinkFailureScenarioTests
         var message = _messagePublisher.PublishedMessages[0].Should().BeOfType<PulseIngested>().Subject;
         message.Status.Should().Be(IngestionStatus.PartialSuccess);
         failingAnalyticsSink.CaptureCallCount.Should().Be(1);
+    }
+
+    /// <summary>Every raw signal is sanitized once before sink fan-out.</summary>
+    /// <returns>The test task.</returns>
+    [Fact]
+    public async Task SignalFanOut_RedactsEverySink()
+    {
+        var traces = new SuccessfulTraceSink();
+        var logs = new SuccessfulLogSink();
+        var metrics = new SuccessfulMetricsSink();
+        var pipeline = CreatePipeline([traces], [logs], [metrics]);
+        var data = Encoding.UTF8.GetBytes("{\"attributes\":[{\"key\":\"password\",\"value\":{\"stringValue\":\"private-password\"}}]}");
+
+        await pipeline.ProcessTracesAsync(1, "service", "node", rawOtlpData: data, contentType: "application/json");
+        await pipeline.ProcessLogsAsync(1, "service", "node", rawOtlpData: data, contentType: "application/json");
+        await pipeline.ProcessMetricsAsync(1, "service", "node", rawOtlpData: data, contentType: "application/json");
+
+        foreach (var received in new[] { traces.LastReceivedData, logs.LastReceivedData, metrics.LastReceivedData })
+        {
+            received.Should().NotBeNull();
+            Encoding.UTF8.GetString(received.GetValueOrDefault().Span).Should().Contain("[REDACTED]").And.NotContain("private-password");
+        }
+    }
+
+    /// <summary>Malformed raw payloads never reach a registered sink.</summary>
+    /// <returns>The test task.</returns>
+    [Fact]
+    public async Task InvalidPayload_IsRejectedBeforeFanOut()
+    {
+        var traces = new SuccessfulTraceSink();
+        var pipeline = CreatePipeline([traces], [], []);
+        var act = () => pipeline.ProcessTracesAsync(1, "service", "node", rawOtlpData: Encoding.UTF8.GetBytes("not protobuf"));
+
+        await act.Should().ThrowAsync<InvalidDataException>();
+        traces.ExportCallCount.Should().Be(0);
     }
 
     private IngestionPipeline CreatePipeline(

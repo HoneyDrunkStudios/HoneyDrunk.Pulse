@@ -55,6 +55,10 @@ public sealed partial class SentrySink(
         {
             SentrySdk.CaptureException(errorEvent.Exception);
         }
+        else if (CreateExceptionEvent(errorEvent) is { } sentryEvent)
+        {
+            SentrySdk.CaptureEvent(sentryEvent);
+        }
         else if (!string.IsNullOrEmpty(errorEvent.Message))
         {
             var sentryLevel = MapSeverityToSentryLevel(errorEvent.Severity);

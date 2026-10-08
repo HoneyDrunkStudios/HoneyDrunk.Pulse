@@ -72,8 +72,26 @@ public sealed class PulseCollectorOptions
 
     /// <summary>
     /// Gets or sets a value indicating whether to require authentication for OTLP endpoints.
+    /// When enabled, a JWT authority and audience must be configured in every environment.
     /// </summary>
     public bool RequireOtlpAuthentication { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether anonymous OTLP ingestion is deliberately allowed
+    /// outside Development. Only use behind an independently authenticated, network-isolated gateway.
+    /// This does not bypass authentication when <see cref="RequireOtlpAuthentication"/> is enabled.
+    /// </summary>
+    public bool AllowUnauthenticatedOtlpInNonDevelopment { get; set; }
+
+    /// <summary>
+    /// Gets or sets the HTTPS OpenID Connect authority used to validate OTLP bearer tokens.
+    /// </summary>
+    public string? OtlpAuthenticationAuthority { get; set; }
+
+    /// <summary>
+    /// Gets or sets the dedicated collector audience required in OTLP bearer tokens.
+    /// </summary>
+    public string? OtlpAuthenticationAudience { get; set; }
 
     /// <summary>
     /// Gets or sets the transport adapter to use.

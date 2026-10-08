@@ -12,6 +12,7 @@ using HoneyDrunk.Pulse.Contracts.Events;
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
 using HoneyDrunk.Transport.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -256,7 +257,9 @@ public class IngestionPipelineTests
 
         // Assert
         _errorSink.CapturedErrors.Should().HaveCount(1);
-        _errorSink.CapturedErrors[0].Exception.Should().BeOfType<InvalidOperationException>();
+        _errorSink.CapturedErrors[0].Exception.Should().BeNull();
+        _errorSink.CapturedErrors[0].Tags["exception.type"].Should().Be(typeof(InvalidOperationException).FullName);
+        _errorSink.CapturedErrors[0].Extra["exception.message"].Should().Be("Test error");
     }
 
     /// <summary>
@@ -433,11 +436,80 @@ public class IngestionPipelineTests
         message.BatchId!.Length.Should().Be(32); // GUID without dashes
     }
 
+    /// <summary>Sanitizes error exports without writing payloads into local logs.</summary>
+    /// <returns>The test task.</returns>
+    [Fact]
+    public async Task ProcessErrorAsync_RedactsExportsAndLocalLogs()
+    {
+        var logger = new CapturingLogger();
+        var pipeline = CreatePipeline(logger);
+        var error = ErrorEvent.FromException(new InvalidOperationException("password=private-password"));
+        error.Tags["Authorization"] = "private-bearer";
+        error.Extra["context"] = new Dictionary<string, object?> { ["email"] = "reader@example.test" };
+
+        await pipeline.ProcessErrorAsync(error, "safe-service");
+
+        var captured = _errorSink.CapturedErrors.Should().ContainSingle().Subject;
+        captured.Message.Should().NotContain("private-password");
+        captured.Exception.Should().BeNull();
+        captured.Tags["Authorization"].Should().Be("[REDACTED]");
+        logger.Messages.Should().NotContain(message => message.Contains("private-", StringComparison.Ordinal));
+        error.Exception.Should().NotBeNull();
+        error.Tags["Authorization"].Should().Be("private-bearer");
+    }
+
+    /// <summary>Both extracted error routes use the shared policy before export.</summary>
+    /// <returns>The test task.</returns>
+    [Fact]
+    public async Task ExtractedErrors_RedactMessagesAttributesAndExceptions()
+    {
+        var pipeline = CreatePipeline();
+        var attributes = new Dictionary<string, string> { ["api.key"] = "private-key" };
+        await pipeline.ProcessTracesAsync(
+            1,
+            "service",
+            "node",
+            [new ExtractedErrorSpan("operation", "service", "password=private-password", "Exception", "token=private-token", "at Handler()", "trace", "span", attributes)]);
+        await pipeline.ProcessLogsAsync(
+            1,
+            "service",
+            "node",
+            [new ExtractedErrorLog("reader@example.test", 17, "ERROR", DateTimeOffset.UtcNow, "service", "trace", "span", "Exception", "token=private-token", "at Handler()", attributes)]);
+
+        _errorSink.CapturedErrors.Should().HaveCount(2);
+        foreach (var error in _errorSink.CapturedErrors)
+        {
+            error.Tags["api.key"].Should().Be("[REDACTED]");
+            error.Message.Should().NotContain("private-").And.NotContain("reader@example.test");
+            error.Extra["exception.message"].Should().Be("token=[REDACTED]");
+            error.Tags["trace.id"].Should().Be("trace");
+            error.Tags["span.id"].Should().Be("span");
+        }
+    }
+
+    /// <summary>Analytics are copied and redacted before they reach the sink.</summary>
+    /// <returns>The test task.</returns>
+    [Fact]
+    public async Task ProcessAnalyticsEventsAsync_RedactsNestedProperties()
+    {
+        var original = TelemetryEvent.Create("operation.completed").WithDistinctId("opaque-user")
+            .WithProperty("context", new Dictionary<string, object?> { ["password"] = "private-password" });
+        await CreatePipeline().ProcessAnalyticsEventsAsync([original], "service", "node", tenantId: "reader@example.test");
+
+        var captured = _analyticsSink.CapturedBatches.Single().Single();
+        var properties = captured.Properties["context"].Should().BeOfType<Dictionary<string, object?>>().Subject;
+        properties["password"].Should().Be("[REDACTED]");
+        captured.DistinctId.Should().Be("opaque-user");
+        captured.TenantId.Should().Be("[REDACTED]");
+        original.Properties["context"].Should().BeOfType<Dictionary<string, object?>>()
+            .Which["password"].Should().Be("private-password");
+    }
+
     /// <summary>
     /// Creates a new IngestionPipeline instance with the configured test dependencies.
     /// </summary>
     /// <returns>A new IngestionPipeline instance.</returns>
-    private IngestionPipeline CreatePipeline()
+    private IngestionPipeline CreatePipeline(ILogger<IngestionPipeline>? logger = null)
     {
         return new IngestionPipeline(
             _enricher,
@@ -449,7 +521,20 @@ public class IngestionPipelineTests
             _publisher,
             _options,
             lokiOptions: null,
-            NullLogger<IngestionPipeline>.Instance);
+            logger ?? NullLogger<IngestionPipeline>.Instance);
+    }
+
+    private sealed class CapturingLogger : ILogger<IngestionPipeline>
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => Messages.Add(formatter(state, exception) + exception);
     }
 
     private sealed class FakeAnalyticsSink : IAnalyticsSink

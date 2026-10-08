@@ -6,6 +6,7 @@ using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Conventions;
 using HoneyDrunk.Telemetry.Abstractions.Tags;
 using HoneyDrunk.Telemetry.OpenTelemetry.Options;
+using HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -113,7 +114,10 @@ public static class ServiceCollectionExtensions
                 {
                     otelLogging.SetResourceBuilder(resourceBuilder);
                     otelLogging.IncludeFormattedMessage = true;
-                    otelLogging.IncludeScopes = true;
+
+                    // SDK scope values cannot be replaced by a log processor.
+                    otelLogging.IncludeScopes = false;
+                    otelLogging.AddProcessor(new LogRedactionProcessor());
 
                     ConfigureOtlpExporter(
                         otelLogging,
@@ -222,6 +226,9 @@ public static class ServiceCollectionExtensions
                 httpOptions.RecordException = true;
             });
         }
+
+        // Redact before the exporter snapshots or queues activity data.
+        tracing.AddProcessor(_ => new TelemetryRedactionProcessor());
 
         // Configure OTLP exporter
         ConfigureOtlpExporter(tracing, options.OtlpEndpoint, options.ExportProtocol);
