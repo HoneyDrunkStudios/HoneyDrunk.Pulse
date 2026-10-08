@@ -45,10 +45,8 @@ public sealed class TelemetryRedactionProcessor : BaseProcessor<Activity>
     private static ActivityTagsCollection RedactTags(IEnumerable<KeyValuePair<string, object?>>? tags)
     {
         ActivityTagsCollection result = [];
-        foreach (var tag in tags ?? [])
+        foreach (var redacted in (tags ?? []).Select(RedactTag))
         {
-            var redacted = RedactTag(tag);
-
             // Match the enumerable constructor: collisions replace earlier values and null removes a key.
             result[redacted.Key] = redacted.Value;
         }

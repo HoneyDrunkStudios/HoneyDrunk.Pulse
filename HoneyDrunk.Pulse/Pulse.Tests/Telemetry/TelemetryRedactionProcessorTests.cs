@@ -219,9 +219,9 @@ public sealed class TelemetryRedactionProcessorTests
             options.AddProcessor(redactionProcessor);
             options.AddProcessor(exportProcessor);
         }));
-        object collection = nestedDictionary
-            ? (object?[])[new Dictionary<string, object?> { ["password"] = "array-sensitive" }]
-            : (string[])["benign", "token=array-sensitive"];
+        object?[] nestedValues = [new Dictionary<string, object?> { ["password"] = "array-sensitive" }];
+        string[] textValues = ["benign", "token=array-sensitive"];
+        object collection = nestedDictionary ? nestedValues : textValues;
         var attributes = new List<KeyValuePair<string, object?>>
         {
             new("Payload", collection),
