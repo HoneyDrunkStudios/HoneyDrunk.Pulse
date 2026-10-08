@@ -879,7 +879,8 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         {
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                LogJsonSpanParseFallback(ex.GetType().Name);
+                var failureType = ex.GetType().Name;
+                LogJsonSpanParseFallback(failureType);
             }
 
             return Math.Max(1, bytes.Length / 300);
@@ -922,7 +923,8 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         {
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                LogJsonMetricParseFallback(ex.GetType().Name);
+                var failureType = ex.GetType().Name;
+                LogJsonMetricParseFallback(failureType);
             }
 
             return Math.Max(1, bytes.Length / 100);
@@ -965,7 +967,8 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         {
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                LogJsonLogParseFallback(ex.GetType().Name);
+                var failureType = ex.GetType().Name;
+                LogJsonLogParseFallback(failureType);
             }
 
             return Math.Max(1, bytes.Length / 150);
@@ -1039,7 +1042,8 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         {
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                LogServiceNameExtractionFailed(ex.GetType().Name);
+                var failureType = ex.GetType().Name;
+                LogServiceNameExtractionFailed(failureType);
             }
         }
 
@@ -1101,7 +1105,8 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         {
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                LogErrorSpanExtractionFailed(ex.GetType().Name);
+                var failureType = ex.GetType().Name;
+                LogErrorSpanExtractionFailed(failureType);
             }
         }
 
@@ -1199,7 +1204,8 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         {
             if (logger.IsEnabled(LogLevel.Debug))
             {
-                LogErrorLogExtractionFailed(ex.GetType().Name);
+                var failureType = ex.GetType().Name;
+                LogErrorLogExtractionFailed(failureType);
             }
         }
 

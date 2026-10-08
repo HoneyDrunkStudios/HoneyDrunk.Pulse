@@ -709,7 +709,9 @@ public sealed partial class IngestionPipeline(
 
                 if (logger.IsEnabled(LogLevel.Debug))
                 {
-                    LogErrorSpanForwarded(TelemetryRedactor.RedactText(errorSpan.SpanName) ?? UnknownSource, TelemetryRedactor.RedactText(errorSpan.ServiceName) ?? UnknownSource);
+                    var spanNameForLog = TelemetryRedactor.RedactText(errorSpan.SpanName) ?? UnknownSource;
+                    var serviceNameForLog = TelemetryRedactor.RedactText(errorSpan.ServiceName) ?? UnknownSource;
+                    LogErrorSpanForwarded(spanNameForLog, serviceNameForLog);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
@@ -801,7 +803,9 @@ public sealed partial class IngestionPipeline(
 
                 if (logger.IsEnabled(LogLevel.Debug))
                 {
-                    LogErrorLogForwarded(TelemetryRedactor.RedactText(errorLog.SeverityText) ?? "ERROR", TelemetryRedactor.RedactText(sourceName ?? errorLog.ServiceName) ?? UnknownSource);
+                    var severityForLog = TelemetryRedactor.RedactText(errorLog.SeverityText) ?? "ERROR";
+                    var serviceNameForLog = TelemetryRedactor.RedactText(sourceName ?? errorLog.ServiceName) ?? UnknownSource;
+                    LogErrorLogForwarded(severityForLog, serviceNameForLog);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
