@@ -1,4 +1,4 @@
-# HoneyDrunk.Pulse Repository Guidelines
+# HoneyDrunk.Pulse engineering guide
 
 ## Project Overview
 
@@ -101,6 +101,8 @@ This is a hard expectation, not a nicety:
 
 ## Build and Testing
 
+Run these commands from `HoneyDrunk.Pulse/` for code/build changes. Documentation-only changes need content/link validation.
+
 ```bash
 dotnet restore
 dotnet build -c Release
@@ -110,7 +112,7 @@ dotnet test -c Release --no-build
 - Targets **.NET 10.0**. Warnings are errors.
 - Tests live only in `Pulse.Tests` — no test code in libraries or the Collector. Prefer
   **xUnit** + **AwesomeAssertions**. Test classes mirror implementation.
-- All code changes include tests unless the issue explicitly says otherwise.
+- Tests cover changed behavior; use the existing suite and add meaningful regression cases where needed.
 
 ---
 
