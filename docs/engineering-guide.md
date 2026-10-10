@@ -1,4 +1,4 @@
-# HoneyDrunk.Pulse Repository Guidelines
+# HoneyDrunk.Pulse engineering guide
 
 ## Project Overview
 
@@ -101,6 +101,8 @@ This is a hard expectation, not a nicety:
 
 ## Build and Testing
 
+Run these commands from `HoneyDrunk.Pulse/` for code/build changes. Documentation-only changes need content/link validation.
+
 ```bash
 dotnet restore
 dotnet build -c Release
@@ -110,7 +112,7 @@ dotnet test -c Release --no-build
 - Targets **.NET 10.0**. Warnings are errors.
 - Tests live only in `Pulse.Tests` — no test code in libraries or the Collector. Prefer
   **xUnit** + **AwesomeAssertions**. Test classes mirror implementation.
-- All code changes include tests unless the issue explicitly says otherwise.
+- Tests cover changed behavior; use the existing suite and add meaningful regression cases where needed.
 
 ---
 
@@ -134,6 +136,6 @@ dotnet test -c Release --no-build
   (`feat(sink.loki):`, `fix(collector):`). Present tense, concise first line (≤ 50 chars).
 - Breaking contract changes: note `BREAKING CHANGE:` in the commit body.
 - Keep PRs small and focused; align with the issue's acceptance criteria.
-- Run build + tests locally before pushing. Analyzer compliance is mandatory.
+- For code/build changes, run build + tests locally before pushing; analyzer compliance is mandatory. Documentation-only changes require content and link checks.
 - Respect `.gitignore` / `.gitleaks.toml` / `.trivyignore` — never commit `bin/`, `obj/`,
   or secrets.
