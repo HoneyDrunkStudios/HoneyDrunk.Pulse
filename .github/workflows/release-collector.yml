@@ -34,19 +34,19 @@ on:
     branches: [main]
     paths:
       # Own deployable source (Dockerfile and .proto files live here).
-      - 'HoneyDrunk.Pulse/Pulse.Collector/**'
+      - 'src/Pulse.Collector/**'
       # ProjectReference closure of the Collector binary. The Sink.* glob
       # covers all six concrete sinks AND the shared-source Sink.Shared
       # (compiled into Loki/Mimir/Tempo via <Compile Include>), so a new sink
       # is auto-covered without editing this filter.
-      - 'HoneyDrunk.Pulse/HoneyDrunk.Pulse.Contracts/**'
-      - 'HoneyDrunk.Pulse/HoneyDrunk.Telemetry.Abstractions/**'
-      - 'HoneyDrunk.Pulse/HoneyDrunk.Telemetry.OpenTelemetry/**'
-      - 'HoneyDrunk.Pulse/HoneyDrunk.Telemetry.Sink.*/**'
+      - 'src/HoneyDrunk.Pulse.Contracts/**'
+      - 'src/HoneyDrunk.Telemetry.Abstractions/**'
+      - 'src/HoneyDrunk.Telemetry.OpenTelemetry/**'
+      - 'src/HoneyDrunk.Telemetry.Sink.*/**'
       # Solution file, Docker ignore rules, and the workflow itself — all affect
       # the built image. (No NuGet.config in this repo.)
-      - 'HoneyDrunk.Pulse/HoneyDrunk.Pulse.slnx'
-      - 'HoneyDrunk.Pulse/.dockerignore'
+      - 'HoneyDrunk.Pulse.slnx'
+      - '.dockerignore'
       - '.github/workflows/release-collector.yml'
     tags:
       - 'collector-v*'
@@ -101,8 +101,8 @@ jobs:
     uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/job-deploy-container-app.yml@main
     with:
       environment: dev
-      build-context: HoneyDrunk.Pulse
-      dockerfile: Pulse.Collector/Dockerfile
+      build-context: '.'
+      dockerfile: src/Pulse.Collector/Dockerfile
       image-name: honeydrunk-pulse-collector
       # Dev images are SHA-identified (no version stamp), tagged dev-<sha>.
       image-tag: dev-${{ github.sha }}
@@ -159,8 +159,8 @@ jobs:
     uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/job-deploy-container-app.yml@main
     with:
       environment: staging
-      build-context: HoneyDrunk.Pulse
-      dockerfile: Pulse.Collector/Dockerfile
+      build-context: '.'
+      dockerfile: src/Pulse.Collector/Dockerfile
       image-name: honeydrunk-pulse-collector
       # SemVer tag is the version-of-record; the image carries it verbatim.
       image-tag: ${{ github.ref_name }}
@@ -226,8 +226,8 @@ jobs:
     uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/job-deploy-container-app.yml@main
     with:
       environment: prod
-      build-context: HoneyDrunk.Pulse
-      dockerfile: Pulse.Collector/Dockerfile
+      build-context: '.'
+      dockerfile: src/Pulse.Collector/Dockerfile
       image-name: honeydrunk-pulse-collector
       image-tag: ${{ github.ref_name }}
       acr-registry: ${{ needs.resolve-prod.outputs.acr_registry }}

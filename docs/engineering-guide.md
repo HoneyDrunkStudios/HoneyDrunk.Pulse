@@ -70,7 +70,7 @@ This is a hard expectation, not a nicety:
 
 ### Code Organization
 
-- No `/src` or `/tests` folders. Projects live at repo root under `HoneyDrunk.Pulse/`.
+- Production projects live in `src/`, tests in `tests/`, and examples in `samples/`; the solution is at the repository root.
 - Each sink: `Extensions/` (DI), `Implementation/`, `Options/`. Keep that shape.
 - Collector domains: `Endpoints/`, `Ingestion/`, `Enrichment/`, `Transport/`, `Services/`,
   `Configuration/`, `Protos/`. Keep the deployable thin — shared logic in libraries.
@@ -101,7 +101,7 @@ This is a hard expectation, not a nicety:
 
 ## Build and Testing
 
-Run these commands from `HoneyDrunk.Pulse/` for code/build changes. Documentation-only changes need content/link validation.
+Run these commands from the repository root for code/build changes. Documentation-only changes need content/link validation.
 
 ```bash
 dotnet restore

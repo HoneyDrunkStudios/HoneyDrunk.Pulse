@@ -24,7 +24,7 @@ jobs:
       dotnet-version: '10.0.x'
       configuration: 'Release'
       runs-on: 'ubuntu-latest'
-      working-directory: 'HoneyDrunk.Pulse'
+      working-directory: '.'
       project-path: './HoneyDrunk.Pulse.slnx'
       enable-secret-scan: true
       enable-accessibility-check: false
@@ -61,7 +61,7 @@ jobs:
     with:
       dotnet-version: '10.0.x'
       runs-on: 'ubuntu-latest'
-      working-directory: 'HoneyDrunk.Pulse'
+      working-directory: '.'
       project-path: './HoneyDrunk.Pulse.slnx'
       sonar-organization: 'honeydrunkstudios'
       sonar-project-key: 'honeydrunkstudios_HoneyDrunk.Pulse'
@@ -128,7 +128,7 @@ jobs:
       dotnet-version: '10.0.x'
       configuration: 'Release'
       runs-on: 'ubuntu-latest'
-      working-directory: 'HoneyDrunk.Pulse'
+      working-directory: '.'
       project-path: './HoneyDrunk.Pulse.slnx'
       actions-ref: 'main'
     secrets:
