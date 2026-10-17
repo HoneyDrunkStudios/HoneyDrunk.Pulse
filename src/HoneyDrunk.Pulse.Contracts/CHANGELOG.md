@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to HoneyDrunk.Telemetry.Sink.AzureMonitor will be documented in this file.
+All notable changes to HoneyDrunk.Pulse.Contracts will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -13,15 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2026-05-28
 
-### Changed
-
-- `ServiceCollectionExtensions`: the two `AddAzureMonitorSink` overloads moved adjacent (Sonar S4136).
-
 ### Internal
 
-- Bumped `Azure.Monitor.OpenTelemetry.Exporter` `1.7.0 -> 1.8.1`.
-- Bumped `Microsoft.Extensions.*` `10.0.7 -> 10.0.8`.
-- See the [repo CHANGELOG](../CHANGELOG.md) for the full release notes.
+- Package version aligned to `0.4.0` for the Pulse 0.4.0 release train. See the [repo CHANGELOG](../../HoneyDrunk.Pulse/CHANGELOG.md) for the full ADR-0011 D11 Sonar/SAST cleanup, dependency train refresh, and Dockerfile hardening that ship in this release.
 
 ## [Unreleased]
 
@@ -45,8 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `AzureMonitorSink` implementing `ITraceSink`, `ILogSink`, and `IMetricsSink`
-- OTLP data forwarding to Application Insights via Azure Monitor OpenTelemetry Exporter
-- Connection string configuration via `AzureMonitorSinkOptions`
-- `AddAzureMonitorSink` service registration extension
-- Depends on Azure.Monitor.OpenTelemetry.Exporter 1.6.0
+- `PulseIngested` event contract for Transport publishing
+- `IngestionStatus` enum (`Success`, `PartialSuccess`, `Failed`)
+- `TelemetryEvent` model for analytics pipeline events
+- `ErrorEvent` model for error tracking
+- `ExtractedErrorSpan` and `ExtractedErrorLog` DTOs for error routing
+- `TelemetryEventSeverity` enum for severity classification
+- Multi-target support: `netstandard2.0`, `net8.0`, `net10.0`

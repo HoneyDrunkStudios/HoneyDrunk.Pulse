@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
-- Package version aligned to `0.4.0`. See the [repo CHANGELOG](../CHANGELOG.md) for the full release notes.
+- Package version aligned to `0.4.0`. See the [repo CHANGELOG](../../HoneyDrunk.Pulse/CHANGELOG.md) for the full release notes.
 
 ## [Unreleased]
 

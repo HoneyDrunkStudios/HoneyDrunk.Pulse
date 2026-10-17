@@ -7,15 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Note:** See individual package CHANGELOGs for detailed per-package changes:
 
-- [HoneyDrunk.Pulse.Contracts](HoneyDrunk.Pulse.Contracts/CHANGELOG.md)
-- [HoneyDrunk.Telemetry.Abstractions](HoneyDrunk.Telemetry.Abstractions/CHANGELOG.md)
-- [HoneyDrunk.Telemetry.OpenTelemetry](HoneyDrunk.Telemetry.OpenTelemetry/CHANGELOG.md)
-- [HoneyDrunk.Telemetry.Sink.Loki](HoneyDrunk.Telemetry.Sink.Loki/CHANGELOG.md)
-- [HoneyDrunk.Telemetry.Sink.Tempo](HoneyDrunk.Telemetry.Sink.Tempo/CHANGELOG.md)
-- [HoneyDrunk.Telemetry.Sink.Mimir](HoneyDrunk.Telemetry.Sink.Mimir/CHANGELOG.md)
-- [HoneyDrunk.Telemetry.Sink.PostHog](HoneyDrunk.Telemetry.Sink.PostHog/CHANGELOG.md)
-- [HoneyDrunk.Telemetry.Sink.Sentry](HoneyDrunk.Telemetry.Sink.Sentry/CHANGELOG.md)
-- [HoneyDrunk.Telemetry.Sink.AzureMonitor](HoneyDrunk.Telemetry.Sink.AzureMonitor/CHANGELOG.md)
+- [HoneyDrunk.Pulse.Contracts](../src/HoneyDrunk.Pulse.Contracts/CHANGELOG.md)
+- [HoneyDrunk.Telemetry.Abstractions](../src/HoneyDrunk.Telemetry.Abstractions/CHANGELOG.md)
+- [HoneyDrunk.Telemetry.OpenTelemetry](../src/HoneyDrunk.Telemetry.OpenTelemetry/CHANGELOG.md)
+- [HoneyDrunk.Telemetry.Sink.Loki](../src/HoneyDrunk.Telemetry.Sink.Loki/CHANGELOG.md)
+- [HoneyDrunk.Telemetry.Sink.Tempo](../src/HoneyDrunk.Telemetry.Sink.Tempo/CHANGELOG.md)
+- [HoneyDrunk.Telemetry.Sink.Mimir](../src/HoneyDrunk.Telemetry.Sink.Mimir/CHANGELOG.md)
+- [HoneyDrunk.Telemetry.Sink.PostHog](../src/HoneyDrunk.Telemetry.Sink.PostHog/CHANGELOG.md)
+- [HoneyDrunk.Telemetry.Sink.Sentry](../src/HoneyDrunk.Telemetry.Sink.Sentry/CHANGELOG.md)
+- [HoneyDrunk.Telemetry.Sink.AzureMonitor](../src/HoneyDrunk.Telemetry.Sink.AzureMonitor/CHANGELOG.md)
 
 ## [0.4.1] - 2026-09-26
 
@@ -29,24 +29,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `Pulse.Collector/Program.cs` made non-instantiable via a private constructor (Sonar S1118). Kept the type non-static because `ILogger<Program>` is used as the standard logger category across the OTLP handlers.
-- `Pulse.Collector/Telemetry/CollectorTelemetry.cs` is now a `static class` (all members were already static).
-- `Pulse.Collector/Endpoints/HealthEndpoints.cs` and `OtlpEndpoints.cs`: extracted constants for the `Health` tag, `application/json`, `application/x-protobuf`, `OTLP` tag, `X-Source-Service` / `X-Source-NodeId` header names, and the `accepted` status (Sonar S1192).
-- `Pulse.Collector/Configuration/OtlpEndpointValidationExtensions.cs`: `ValidateOtlpEndpointNotSelfReferencing` cognitive complexity 19 → under 15 by extracting `IsSelfReferencing` and `PointsToSameEndpoint` helpers (Sonar S3776).
-- `Pulse.Collector/Enrichment/TelemetryEnricher.cs`: `EnrichErrorEvent` and `EnrichTelemetryEvent` cognitive complexity 19/18 → under 15 by extracting `MergeOperationContextIntoErrorEvent` / `MergeOperationContextIntoTelemetryEvent`. Magic string `"pulse.ingested_at"` extracted to `IngestedAtKey` constant (S1192 × 7).
-- `Pulse.Collector/Ingestion/IngestionPipeline.cs`: `"unknown"` magic string extracted to `UnknownSource` constant (S1192 × 6). `Pipeline.cs` ctor (10 deps, all DI-injected) and `Process*Async` methods (8–10 params, all per-channel attribution) carry file-level `S107` + `S3776` suppressions with justification — the per-channel routing in this orchestrator class would be obscured by request-record bundling.
-- `Pulse.Collector/Ingestion/IngestionPipeline.Log.cs`: kept `LogLogsBatchFilteredByLevel` taking `string minimumLevel` (LoggerMessage source-gen forbids non-loggable `LogLevel` template parameters); the `.ToString()` at the call site is cheap (enum) and the partial gates message formatting via `IsEnabled` internally.
-- `Pulse.Collector/Ingestion/OtlpParser.cs`: magic strings extracted (`AttributesKey`, `ResourceLogsKey`, `ExceptionTypeKey`, `ExceptionMessageKey`, `ExceptionStacktraceKey`); two `foreach`+find loops collapsed to `.FirstOrDefault(...)` (Sonar S3267). File-level `S3776` suppression with justification — OTLP protobuf parsers are inherently branchy (per-OTLP-type mapping with optional fields and dual JSON/protobuf content-type paths); the existing private helpers already capture the natural seams.
-- `HoneyDrunk.Telemetry.Sink.Shared/HttpOtlpSinkOptionsAdapter.cs`: 8-param constructor reduced to 6 by bundling the three Vault auth secret names into a new `HttpOtlpSinkAuthSecretNames` record (Sonar S107). Loki, Mimir, and Tempo sink callers updated. Both adapter classes converted to primary constructors (Sonar roslyn-use-primary-constructor).
-- `HoneyDrunk.Telemetry.Sink.PostHog/Mapping/PostHogEventMapper.cs`: `foreach` + nested filter folded into `.Where(...)` (Sonar S3267).
-- `HoneyDrunk.Telemetry.OpenTelemetry/Enrichment/ActivityEnricher.cs`: the two `EnrichWithGridContext` overloads moved adjacent (Sonar S4136).
-- `HoneyDrunk.Telemetry.Sink.AzureMonitor/Extensions/ServiceCollectionExtensions.cs`: the two `AddAzureMonitorSink` overloads moved adjacent (Sonar S4136).
-- `HoneyDrunk.Pulse.Sample.Api/Program.cs` and `HoneyDrunk.Pulse.Sample.Worker/Program.cs`: `app.Run()` / `host.Run()` → `await app.RunAsync()` / `await host.RunAsync()` (Sonar async-await rule).
+- `../src/Pulse.Collector/Program.cs` made non-instantiable via a private constructor (Sonar S1118). Kept the type non-static because `ILogger<Program>` is used as the standard logger category across the OTLP handlers.
+- `../src/Pulse.Collector/Telemetry/CollectorTelemetry.cs` is now a `static class` (all members were already static).
+- `../src/Pulse.Collector/Endpoints/HealthEndpoints.cs` and `OtlpEndpoints.cs`: extracted constants for the `Health` tag, `application/json`, `application/x-protobuf`, `OTLP` tag, `X-Source-Service` / `X-Source-NodeId` header names, and the `accepted` status (Sonar S1192).
+- `../src/Pulse.Collector/Configuration/OtlpEndpointValidationExtensions.cs`: `ValidateOtlpEndpointNotSelfReferencing` cognitive complexity 19 → under 15 by extracting `IsSelfReferencing` and `PointsToSameEndpoint` helpers (Sonar S3776).
+- `../src/Pulse.Collector/Enrichment/TelemetryEnricher.cs`: `EnrichErrorEvent` and `EnrichTelemetryEvent` cognitive complexity 19/18 → under 15 by extracting `MergeOperationContextIntoErrorEvent` / `MergeOperationContextIntoTelemetryEvent`. Magic string `"pulse.ingested_at"` extracted to `IngestedAtKey` constant (S1192 × 7).
+- `../src/Pulse.Collector/Ingestion/IngestionPipeline.cs`: `"unknown"` magic string extracted to `UnknownSource` constant (S1192 × 6). `Pipeline.cs` ctor (10 deps, all DI-injected) and `Process*Async` methods (8–10 params, all per-channel attribution) carry file-level `S107` + `S3776` suppressions with justification — the per-channel routing in this orchestrator class would be obscured by request-record bundling.
+- `../src/Pulse.Collector/Ingestion/IngestionPipeline.Log.cs`: kept `LogLogsBatchFilteredByLevel` taking `string minimumLevel` (LoggerMessage source-gen forbids non-loggable `LogLevel` template parameters); the `.ToString()` at the call site is cheap (enum) and the partial gates message formatting via `IsEnabled` internally.
+- `../src/Pulse.Collector/Ingestion/OtlpParser.cs`: magic strings extracted (`AttributesKey`, `ResourceLogsKey`, `ExceptionTypeKey`, `ExceptionMessageKey`, `ExceptionStacktraceKey`); two `foreach`+find loops collapsed to `.FirstOrDefault(...)` (Sonar S3267). File-level `S3776` suppression with justification — OTLP protobuf parsers are inherently branchy (per-OTLP-type mapping with optional fields and dual JSON/protobuf content-type paths); the existing private helpers already capture the natural seams.
+- `../src/HoneyDrunk.Telemetry.Sink.Shared/HttpOtlpSinkOptionsAdapter.cs`: 8-param constructor reduced to 6 by bundling the three Vault auth secret names into a new `HttpOtlpSinkAuthSecretNames` record (Sonar S107). Loki, Mimir, and Tempo sink callers updated. Both adapter classes converted to primary constructors (Sonar roslyn-use-primary-constructor).
+- `../src/HoneyDrunk.Telemetry.Sink.PostHog/Mapping/PostHogEventMapper.cs`: `foreach` + nested filter folded into `.Where(...)` (Sonar S3267).
+- `../src/HoneyDrunk.Telemetry.OpenTelemetry/Enrichment/ActivityEnricher.cs`: the two `EnrichWithGridContext` overloads moved adjacent (Sonar S4136).
+- `../src/HoneyDrunk.Telemetry.Sink.AzureMonitor/Extensions/ServiceCollectionExtensions.cs`: the two `AddAzureMonitorSink` overloads moved adjacent (Sonar S4136).
+- `../samples/HoneyDrunk.Pulse.Sample.Api/Program.cs` and `../samples/HoneyDrunk.Pulse.Sample.Worker/Program.cs`: `app.Run()` / `host.Run()` → `await app.RunAsync()` / `await host.RunAsync()` (Sonar async-await rule).
 
 ### Security
 
-- `Pulse.Collector/Dockerfile`: `$BUILD_CONFIGURATION` quoted as `"$BUILD_CONFIGURATION"` in `dotnet build` / `dotnet publish` (shellcheck-style finding).
-- `Pulse.Collector/Dockerfile`: `COPY . .` annotated to make the bounded-context guarantee explicit. Hardened `.dockerignore` at the build-context root to exclude `bin/`, `obj/`, `out/`, `publish/`, `TestResults/`, `.git/`, `.vs/`, `.github/`, `.env*`, `secrets.json`, `appsettings.Development.json`, `*.pfx`, `*.snk`, tests, samples, and repo docs (Sonar S6470). The previous file had `.git` re-inclusion entries (for SourceLink) that were a defence-in-depth hole; removed.
+- `../src/Pulse.Collector/Dockerfile`: `$BUILD_CONFIGURATION` quoted as `"$BUILD_CONFIGURATION"` in `dotnet build` / `dotnet publish` (shellcheck-style finding).
+- `../src/Pulse.Collector/Dockerfile`: `COPY . .` annotated to make the bounded-context guarantee explicit. Hardened `.dockerignore` at the build-context root to exclude `bin/`, `obj/`, `out/`, `publish/`, `TestResults/`, `.git/`, `.vs/`, `.github/`, `.env*`, `secrets.json`, `appsettings.Development.json`, `*.pfx`, `*.snk`, tests, samples, and repo docs (Sonar S6470). The previous file had `.git` re-inclusion entries (for SourceLink) that were a defence-in-depth hole; removed.
 
 ### Internal
 

@@ -49,7 +49,7 @@ add a raw-data fallback to improve availability.
 
 ## Ingestion access and limits
 
-See [collector authentication](../Pulse.Collector/README.md#ingestion-authentication)
+See [collector authentication](../../src/Pulse.Collector/README.md#ingestion-authentication)
 for supported JWT authority/audience configuration and the deliberate production
 migration. Configure clients through standard `OTEL_EXPORTER_OTLP_HEADERS` (or the
 signal-specific equivalent) using a short-lived bearer access token from the

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to HoneyDrunk.Telemetry.Sink.Sentry will be documented in this file.
+All notable changes to HoneyDrunk.Telemetry.Sink.AzureMonitor will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -13,12 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2026-05-28
 
+### Changed
+
+- `ServiceCollectionExtensions`: the two `AddAzureMonitorSink` overloads moved adjacent (Sonar S4136).
+
 ### Internal
 
-- Bumped `Sentry` `6.4.1 -> 6.6.0`.
-- Bumped `HoneyDrunk.Vault` `0.3.0 -> 0.7.0`.
+- Bumped `Azure.Monitor.OpenTelemetry.Exporter` `1.7.0 -> 1.8.1`.
 - Bumped `Microsoft.Extensions.*` `10.0.7 -> 10.0.8`.
-- See the [repo CHANGELOG](../CHANGELOG.md) for the full release notes.
+- See the [repo CHANGELOG](../../HoneyDrunk.Pulse/CHANGELOG.md) for the full release notes.
 
 ## [Unreleased]
 
@@ -38,20 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Released 0.2.0 as part of the ADR-0026 tenancy rollout and solution-wide package version alignment.
 
-### Changed
-
-- Replaced configured Sentry DSN values with `DsnSecretName`, defaulting to `Sentry--Dsn`.
-- Resolve the Sentry DSN from `ISecretStore` and reinitialize the SDK when Vault returns a new value/version.
-
 ## [0.1.0] - 2026-02-21
 
 ### Added
 
-- `SentrySink` implementation of `IErrorSink` for Sentry
-- Error event capture with severity mapping
-- Exception details forwarding (type, message, stacktrace)
-- Tag and extra data propagation
-- Grid context enrichment (CorrelationId, NodeId, Environment)
-- `SentrySinkOptions` with DSN and environment configuration
-- `AddSentrySink` service registration extension
-- Depends on Sentry SDK 6.1.0
+- `AzureMonitorSink` implementing `ITraceSink`, `ILogSink`, and `IMetricsSink`
+- OTLP data forwarding to Application Insights via Azure Monitor OpenTelemetry Exporter
+- Connection string configuration via `AzureMonitorSinkOptions`
+- `AddAzureMonitorSink` service registration extension
+- Depends on Azure.Monitor.OpenTelemetry.Exporter 1.6.0

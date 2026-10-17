@@ -1,5 +1,10 @@
 # HoneyDrunk.Pulse
 
+## Repository layout
+
+Open `HoneyDrunk.Pulse.slnx` from the repository root. Production projects live in `src/`, test and canary projects in `tests/`, and examples in `samples/` where present. Shared build configuration stays at the root; project names, namespaces and package identities are unchanged. Existing documentation and release-history locations are retained.
+
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
 
@@ -126,19 +131,19 @@ Detailed documentation is available in the `docs/` folder:
 
 ```
 HoneyDrunk.Pulse/
-├── HoneyDrunk.Pulse.Contracts/             # Shared event contracts (multi-target)
-├── HoneyDrunk.Telemetry.Abstractions/      # Sink interfaces and telemetry models
-├── HoneyDrunk.Telemetry.OpenTelemetry/     # OTel wiring for Grid Nodes
-├── HoneyDrunk.Telemetry.Sink.Tempo/        # Grafana Tempo trace sink
-├── HoneyDrunk.Telemetry.Sink.Loki/         # Grafana Loki log sink
-├── HoneyDrunk.Telemetry.Sink.Mimir/        # Grafana Mimir metrics sink
-├── HoneyDrunk.Telemetry.Sink.PostHog/      # PostHog analytics sink
-├── HoneyDrunk.Telemetry.Sink.Sentry/       # Sentry error tracking sink
-├── HoneyDrunk.Telemetry.Sink.AzureMonitor/ # Azure Monitor all-signals sink
-├── Pulse.Collector/                         # OTLP receiver service (HTTP + gRPC)
-├── HoneyDrunk.Pulse.Sample.Api/            # Sample web API with OTel
-├── HoneyDrunk.Pulse.Sample.Worker/         # Sample worker with OTel
-└── Pulse.Tests/                             # xUnit test suite
+├── src/HoneyDrunk.Pulse.Contracts/             # Shared event contracts (multi-target)
+├── src/HoneyDrunk.Telemetry.Abstractions/      # Sink interfaces and telemetry models
+├── src/HoneyDrunk.Telemetry.OpenTelemetry/     # OTel wiring for Grid Nodes
+├── src/HoneyDrunk.Telemetry.Sink.Tempo/        # Grafana Tempo trace sink
+├── src/HoneyDrunk.Telemetry.Sink.Loki/         # Grafana Loki log sink
+├── src/HoneyDrunk.Telemetry.Sink.Mimir/        # Grafana Mimir metrics sink
+├── src/HoneyDrunk.Telemetry.Sink.PostHog/      # PostHog analytics sink
+├── src/HoneyDrunk.Telemetry.Sink.Sentry/       # Sentry error tracking sink
+├── src/HoneyDrunk.Telemetry.Sink.AzureMonitor/ # Azure Monitor all-signals sink
+├── src/Pulse.Collector/                         # OTLP receiver service (HTTP + gRPC)
+├── samples/HoneyDrunk.Pulse.Sample.Api/            # Sample web API with OTel
+├── samples/HoneyDrunk.Pulse.Sample.Worker/         # Sample worker with OTel
+└── tests/Pulse.Tests/                             # xUnit test suite
 ```
 
 ## 🆕 What's New in v0.1.0
@@ -190,4 +195,4 @@ HoneyDrunk.Pulse/
 See [the operations runbook](HoneyDrunk.Pulse/docs/TELEMETRY_OPERATIONS.md) for redaction
 boundaries, supported ingestion authentication, metric cardinality, retention proposals,
 alerting and deployment verification. Non-Development deployments must review the
-[authentication migration](HoneyDrunk.Pulse/Pulse.Collector/README.md#ingestion-authentication) before rollout.
+[authentication migration](src/Pulse.Collector/README.md#ingestion-authentication) before rollout.

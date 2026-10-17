@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bumped `HoneyDrunk.Kernel.Abstractions` `0.7.0 -> 0.8.0`.
 - Bumped `Microsoft.Extensions.Configuration.Abstractions` / `Microsoft.Extensions.DependencyInjection.Abstractions` / `Microsoft.Extensions.Logging.Abstractions` `10.0.7 -> 10.0.8`.
-- See the [repo CHANGELOG](../CHANGELOG.md) for the full release notes.
+- See the [repo CHANGELOG](../../HoneyDrunk.Pulse/CHANGELOG.md) for the full release notes.
 
 ## [Unreleased]
 

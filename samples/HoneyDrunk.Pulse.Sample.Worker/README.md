@@ -17,7 +17,7 @@ in configuration.
 ## How to run
 
 ```bash
-dotnet run --project HoneyDrunk.Pulse/HoneyDrunk.Pulse.Sample.Worker/HoneyDrunk.Pulse.Sample.Worker.csproj
+dotnet run --project samples/HoneyDrunk.Pulse.Sample.Worker/HoneyDrunk.Pulse.Sample.Worker.csproj
 ```
 
 The worker processes one job per second until stopped (Ctrl+C).

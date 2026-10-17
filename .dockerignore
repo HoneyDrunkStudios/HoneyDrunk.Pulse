@@ -68,3 +68,8 @@
 
 # Other solution scaffolding not consumed by the Collector build
 **/coverlet.runsettings
+
+# Repository-root context also excludes worktree metadata and local state.
+.git
+.local/
+artifacts/

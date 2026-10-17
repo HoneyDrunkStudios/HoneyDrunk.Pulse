@@ -17,7 +17,7 @@ in configuration.
 ## How to run
 
 ```bash
-dotnet run --project HoneyDrunk.Pulse/HoneyDrunk.Pulse.Sample.Api/HoneyDrunk.Pulse.Sample.Api.csproj
+dotnet run --project samples/HoneyDrunk.Pulse.Sample.Api/HoneyDrunk.Pulse.Sample.Api.csproj
 ```
 
 Then send requests (see `HoneyDrunk.Pulse.Sample.Api.http`), e.g.:
