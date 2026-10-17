@@ -28,11 +28,22 @@ public sealed partial class SentrySink(
     ILogger<SentrySink> logger) : IErrorSink, IDisposable
 {
     private readonly SentrySinkOptions _options = options.Value;
+    private readonly Func<Action<SentryOptions>, IDisposable> _initialize = SentrySdk.Init;
     private readonly SemaphoreSlim _initializationLock = new(1, 1);
     private IDisposable? _sentryDisposable;
     private string? _activeDsn;
     private string? _activeDsnVersion;
     private bool _disposed;
+
+    internal SentrySink(
+        ISecretStore secretStore,
+        IOptions<SentrySinkOptions> options,
+        ILogger<SentrySink> logger,
+        Func<Action<SentryOptions>, IDisposable> initialize)
+        : this(secretStore, options, logger)
+    {
+        _initialize = initialize ?? throw new ArgumentNullException(nameof(initialize));
+    }
 
     /// <inheritdoc />
     public async Task CaptureAsync(ErrorEvent errorEvent, CancellationToken cancellationToken = default)
@@ -166,7 +177,7 @@ public sealed partial class SentrySink(
             }
 
             _sentryDisposable?.Dispose();
-            _sentryDisposable = SentrySdk.Init(sentryOptions =>
+            _sentryDisposable = _initialize(sentryOptions =>
             {
                 sentryOptions.Dsn = secret.Value;
                 sentryOptions.Environment = _options.Environment;
