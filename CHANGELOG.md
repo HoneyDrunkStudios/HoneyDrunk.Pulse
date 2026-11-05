@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update HoneyDrunk.Standards and HoneyDrunk.Standards.Tests to 0.4.1 to consume the architecture analyzer and TODO issue-link fixes.
+
 ### Security
 
 - Sanitize SDK trace/log export, analytics emission, collector OTLP fan-out and custom error/analytics events with one shared redaction policy
