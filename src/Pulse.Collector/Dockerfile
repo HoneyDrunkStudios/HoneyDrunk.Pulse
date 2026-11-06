@@ -1,6 +1,12 @@
 # Build context: repository root
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+# CVE-2026-109518: bootstrap Ubuntu's APT fix with retries disabled, as Canonical recommends.
+RUN apt-get -o Acquire::Retries=0 update \
+    && apt-get -o Acquire::Retries=0 install -y --no-install-recommends --only-upgrade '?source-package(^apt$)' \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' apt)" ge 2.8.4ubuntu0.1 \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg6.0t64)" ge 2.8.4ubuntu0.1 \
+    && rm -rf /var/lib/apt/lists/*
 # Run as a non-root user. mcr.microsoft.com/dotnet/aspnet:10.0 defines APP_UID, but pinning the
 # numeric UID explicitly removes the dependency on that base-image detail and prevents the
 # directive from collapsing to USER "" if APP_UID ever becomes unset (CodeQL flags the latter
@@ -11,6 +17,12 @@ EXPOSE 8080
 EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# The SDK stage has an independent OS package set and needs the same bootstrap fix.
+RUN apt-get -o Acquire::Retries=0 update \
+    && apt-get -o Acquire::Retries=0 install -y --no-install-recommends --only-upgrade '?source-package(^apt$)' \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' apt)" ge 2.8.4ubuntu0.1 \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg6.0t64)" ge 2.8.4ubuntu0.1 \
+    && rm -rf /var/lib/apt/lists/*
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /workspace
 
