@@ -1,6 +1,4 @@
-// <copyright file="TelemetryRedactionProcessorTests.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using AwesomeAssertions;
 using HoneyDrunk.Telemetry.OpenTelemetry.Extensions;
@@ -162,6 +160,39 @@ public sealed class TelemetryRedactionProcessorTests
     }
 
     /// <summary>
+    /// Adapters that supply the formatted message as the body cannot retain an unlabeled structured secret.
+    /// </summary>
+    [Fact]
+    public void LogProcessor_PreformattedBody_SuppressesStructuredSecret()
+    {
+        const string secret = "preformatted-sensitive";
+        string? body = null;
+        string? formatted = null;
+        using var exporter = new CaptureExporter<LogRecord>(record =>
+        {
+            body = record.Body;
+            formatted = record.FormattedMessage;
+        });
+        using var matchingBody = new MatchingBodyProcessor();
+        using var redaction = new LogRedactionProcessor();
+        using var export = new SimpleLogRecordExportProcessor(exporter);
+        using var factory = LoggerFactory.Create(logging => logging.AddOpenTelemetry(options =>
+        {
+            options.IncludeFormattedMessage = true;
+            options.AddProcessor(matchingBody);
+            options.AddProcessor(redaction);
+            options.AddProcessor(export);
+        }));
+        var attributes = new List<KeyValuePair<string, object?>> { new("Password", secret) };
+
+        factory.CreateLogger("redaction-test").Log(LogLevel.Warning, default, attributes, null, (_, _) => secret);
+
+        body.Should().Be(TelemetryRedactor.RedactedValue);
+        formatted.Should().Be(TelemetryRedactor.RedactedValue);
+        attributes[0].Value.Should().Be(secret);
+    }
+
+    /// <summary>
     /// Copying safe collections does not erase useful formatted log messages.
     /// </summary>
     [Fact]
@@ -288,5 +319,10 @@ public sealed class TelemetryRedactionProcessorTests
 
             return ExportResult.Success;
         }
+    }
+
+    private sealed class MatchingBodyProcessor : BaseProcessor<LogRecord>
+    {
+        public override void OnEnd(LogRecord data) => data.Body = data.FormattedMessage;
     }
 }

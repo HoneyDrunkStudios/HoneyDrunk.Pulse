@@ -1,6 +1,4 @@
-// <copyright file="TelemetryEnricher.Log.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 namespace HoneyDrunk.Pulse.Collector.Enrichment;
 

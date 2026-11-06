@@ -1,6 +1,4 @@
-// <copyright file="IErrorSink.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Models;
 

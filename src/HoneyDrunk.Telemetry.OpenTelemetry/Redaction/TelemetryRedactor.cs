@@ -1,6 +1,4 @@
-// <copyright file="TelemetryRedactor.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Models;
 using System.Collections;
@@ -155,8 +153,7 @@ public static class TelemetryRedactor
         };
         foreach (var tag in errorEvent.Tags)
         {
-            result.Tags[RedactText(tag.Key) ?? string.Empty] = IsSensitiveKey(tag.Key)
-                ? RedactedValue : RedactText(tag.Value) ?? string.Empty;
+            result.Tags[RedactText(tag.Key) ?? string.Empty] = IsSensitiveKey(tag.Key) ? RedactedValue : RedactText(tag.Value) ?? string.Empty;
         }
 
         CopyProperties(errorEvent.Extra, result.Extra);
@@ -189,8 +186,7 @@ public static class TelemetryRedactor
             var metadata = new Dictionary<string, object?>(StringComparer.Ordinal);
             if (frame.GetMethod() is { } method)
             {
-                var function = method.DeclaringType?.FullName is { } declaringType
-                    ? $"{declaringType}.{method.Name}" : method.Name;
+                var function = method.DeclaringType?.FullName is { } declaringType ? $"{declaringType}.{method.Name}" : method.Name;
                 metadata["function"] = RedactText(function);
             }
 

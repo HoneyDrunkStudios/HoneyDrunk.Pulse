@@ -1,6 +1,4 @@
-// <copyright file="OtlpParser.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using OpenTelemetry.Proto.Collector.Logs.V1;
 using OpenTelemetry.Proto.Collector.Trace.V1;
@@ -11,9 +9,9 @@ using System.Text.Json;
 
 namespace HoneyDrunk.Pulse.Collector.Ingestion;
 
-/// <summary>
+/// <content>
 /// Parses OTLP payloads for traces, metrics, and logs.
-/// </summary>
+/// </content>
 /// <remarks>
 /// <para>
 /// This implementation provides accurate parsing for both JSON and protobuf OTLP payloads.

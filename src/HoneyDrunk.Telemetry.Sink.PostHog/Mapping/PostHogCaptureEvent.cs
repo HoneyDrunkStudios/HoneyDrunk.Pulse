@@ -1,6 +1,4 @@
-// <copyright file="PostHogCaptureEvent.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using System.Text.Json.Serialization;
 

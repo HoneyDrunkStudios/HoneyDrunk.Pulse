@@ -1,6 +1,4 @@
-// <copyright file="ILogSink.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 namespace HoneyDrunk.Telemetry.Abstractions.Abstractions;
 

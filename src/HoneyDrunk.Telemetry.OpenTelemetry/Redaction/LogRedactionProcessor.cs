@@ -1,6 +1,4 @@
-// <copyright file="LogRedactionProcessor.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -38,10 +36,8 @@ public sealed class LogRedactionProcessor : BaseProcessor<LogRecord>
         // Formatting has already happened. A sensitive structured value may be interpolated
         // without its field label, so text-pattern matching alone cannot sanitize that copy.
         var bodyIsFormattedMessage = data.Body == data.FormattedMessage;
-        data.FormattedMessage = suppressFormattedMessage
-            ? TelemetryRedactor.RedactedValue : TelemetryRedactor.RedactText(data.FormattedMessage);
-        data.Body = suppressFormattedMessage && bodyIsFormattedMessage
-            ? TelemetryRedactor.RedactedValue : TelemetryRedactor.RedactText(data.Body);
+        data.FormattedMessage = suppressFormattedMessage ? TelemetryRedactor.RedactedValue : TelemetryRedactor.RedactText(data.FormattedMessage);
+        data.Body = suppressFormattedMessage && bodyIsFormattedMessage ? TelemetryRedactor.RedactedValue : TelemetryRedactor.RedactText(data.Body);
 
         if (data.Exception is { } exception)
         {

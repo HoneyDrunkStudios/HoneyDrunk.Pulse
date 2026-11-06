@@ -1,6 +1,4 @@
-// <copyright file="OtlpMetricsService.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using Google.Protobuf;
 using Grpc.Core;

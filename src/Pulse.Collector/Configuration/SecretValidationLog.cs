@@ -1,6 +1,4 @@
-// <copyright file="SecretValidationLog.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 namespace HoneyDrunk.Pulse.Collector.Configuration;
 

@@ -1,6 +1,4 @@
-// <copyright file="TelemetryRedactorTests.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using AwesomeAssertions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
@@ -277,6 +275,24 @@ public sealed class TelemetryRedactorTests
 
         frames.Should().HaveCount(128);
         frames[^1]["function"].Should().Be($"{typeof(TelemetryRedactorTests).FullName}.{nameof(ThrowAtLeaf)}");
+    }
+
+    /// <summary>
+    /// Nullable tag values from a malformed external payload become safe empty values without mutating the caller.
+    /// </summary>
+    [Fact]
+    public void RedactErrorEvent_NullTagValue_PreservesSafeKeyWithoutMutatingInput()
+    {
+        var original = ErrorEvent.FromMessage("Operation failed");
+        original.Tags["component"] = null!;
+        original.Tags["api_key"] = "private-tag-value";
+
+        var result = TelemetryRedactor.RedactErrorEvent(original);
+
+        result.Tags["component"].Should().BeEmpty();
+        result.Tags["api_key"].Should().Be(TelemetryRedactor.RedactedValue);
+        original.Tags["component"].Should().BeNull();
+        original.Tags["api_key"].Should().Be("private-tag-value");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]

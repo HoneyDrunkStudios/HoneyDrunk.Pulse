@@ -1,6 +1,4 @@
-// <copyright file="SentrySink.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
@@ -13,9 +11,9 @@ using Microsoft.Extensions.Options;
 
 namespace HoneyDrunk.Telemetry.Sink.Sentry.Implementation;
 
-/// <summary>
+/// <content>
 /// Sentry error tracking sink implementation.
-/// </summary>
+/// </content>
 /// <remarks>
 /// Initializes a new instance of the <see cref="SentrySink"/> class.
 /// </remarks>

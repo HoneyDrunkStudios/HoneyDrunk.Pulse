@@ -1,6 +1,4 @@
-// <copyright file="PulseIngestedPublisher.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Kernel.Context;
@@ -8,9 +6,9 @@ using HoneyDrunk.Transport.Abstractions;
 
 namespace HoneyDrunk.Pulse.Collector.Transport;
 
-/// <summary>
+/// <content>
 /// Publishes PulseIngested events via HoneyDrunk.Transport.
-/// </summary>
+/// </content>
 /// <remarks>
 /// Initializes a new instance of the <see cref="PulseIngestedPublisher"/> class.
 /// </remarks>

@@ -1,13 +1,11 @@
-// <copyright file="SentrySink.Mapping.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Models;
 using Sentry.Protocol;
 
 namespace HoneyDrunk.Telemetry.Sink.Sentry.Implementation;
 
-/// <summary>Maps sanitized exception metadata to native Sentry exception events.</summary>
+/// <content>Maps sanitized exception metadata to native Sentry exception events.</content>
 public sealed partial class SentrySink
 {
     internal static SentryEvent? CreateExceptionEvent(ErrorEvent errorEvent)

@@ -1,6 +1,4 @@
-// <copyright file="CollectorTelemetry.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Conventions;
 using HoneyDrunk.Telemetry.Abstractions.Tags;

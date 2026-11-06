@@ -1,6 +1,4 @@
-// <copyright file="TelemetryEnricher.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Pulse.Collector.Configuration;
@@ -11,9 +9,9 @@ using System.Globalization;
 
 namespace HoneyDrunk.Pulse.Collector.Enrichment;
 
-/// <summary>
+/// <content>
 /// Enriches telemetry data with HoneyDrunk context and required attributes.
-/// </summary>
+/// </content>
 /// <remarks>
 /// <para>
 /// This enricher adds missing HoneyDrunk-specific tags and ensures required
