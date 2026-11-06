@@ -1,6 +1,4 @@
-// <copyright file="SinkFailureScenarioTests.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using AwesomeAssertions;
 using HoneyDrunk.Kernel.Abstractions.Context;
@@ -597,7 +595,7 @@ public class SinkFailureScenarioTests
     {
         public int ExportCallCount { get; private set; }
 
-        public Task ExportAsync(ReadOnlyMemory<byte> data, string contentType, CancellationToken cancellationToken = default)
+        public Task ExportAsync(ReadOnlyMemory<byte> traceData, string contentType, CancellationToken cancellationToken = default)
         {
             ExportCallCount++;
             throw new InvalidOperationException(errorMessage);
@@ -617,10 +615,10 @@ public class SinkFailureScenarioTests
 
         public string? LastContentType { get; private set; }
 
-        public Task ExportAsync(ReadOnlyMemory<byte> data, string contentType, CancellationToken cancellationToken = default)
+        public Task ExportAsync(ReadOnlyMemory<byte> traceData, string contentType, CancellationToken cancellationToken = default)
         {
             ExportCallCount++;
-            LastReceivedData = data;
+            LastReceivedData = traceData;
             LastContentType = contentType;
             return Task.CompletedTask;
         }
@@ -635,7 +633,7 @@ public class SinkFailureScenarioTests
     {
         public int ExportCallCount { get; private set; }
 
-        public Task ExportAsync(ReadOnlyMemory<byte> data, string contentType, CancellationToken cancellationToken = default)
+        public Task ExportAsync(ReadOnlyMemory<byte> logData, string contentType, CancellationToken cancellationToken = default)
         {
             ExportCallCount++;
             throw new InvalidOperationException(errorMessage);
@@ -653,10 +651,10 @@ public class SinkFailureScenarioTests
 
         public ReadOnlyMemory<byte>? LastReceivedData { get; private set; }
 
-        public Task ExportAsync(ReadOnlyMemory<byte> data, string contentType, CancellationToken cancellationToken = default)
+        public Task ExportAsync(ReadOnlyMemory<byte> logData, string contentType, CancellationToken cancellationToken = default)
         {
             ExportCallCount++;
-            LastReceivedData = data;
+            LastReceivedData = logData;
             return Task.CompletedTask;
         }
 
@@ -670,7 +668,7 @@ public class SinkFailureScenarioTests
     {
         public int ExportCallCount { get; private set; }
 
-        public Task ExportAsync(ReadOnlyMemory<byte> data, string contentType, CancellationToken cancellationToken = default)
+        public Task ExportAsync(ReadOnlyMemory<byte> metricData, string contentType, CancellationToken cancellationToken = default)
         {
             ExportCallCount++;
             throw new InvalidOperationException(errorMessage);
@@ -688,10 +686,10 @@ public class SinkFailureScenarioTests
 
         public ReadOnlyMemory<byte>? LastReceivedData { get; private set; }
 
-        public Task ExportAsync(ReadOnlyMemory<byte> data, string contentType, CancellationToken cancellationToken = default)
+        public Task ExportAsync(ReadOnlyMemory<byte> metricData, string contentType, CancellationToken cancellationToken = default)
         {
             ExportCallCount++;
-            LastReceivedData = data;
+            LastReceivedData = metricData;
             return Task.CompletedTask;
         }
 

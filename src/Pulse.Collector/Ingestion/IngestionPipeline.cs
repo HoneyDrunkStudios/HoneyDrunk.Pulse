@@ -1,6 +1,4 @@
-// <copyright file="IngestionPipeline.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Pulse.Collector.Configuration;
 using HoneyDrunk.Pulse.Collector.Enrichment;
@@ -17,10 +15,10 @@ using System.Globalization;
 
 namespace HoneyDrunk.Pulse.Collector.Ingestion;
 
-/// <summary>
+/// <content>
 /// Pipeline for processing ingested telemetry and routing to sinks.
 /// Supports multiple sinks per signal type with failure isolation.
-/// </summary>
+/// </content>
 /// <remarks>
 /// Initializes a new instance of the <see cref="IngestionPipeline"/> class.
 /// </remarks>

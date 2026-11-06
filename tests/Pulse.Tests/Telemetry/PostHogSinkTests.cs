@@ -1,6 +1,4 @@
-// <copyright file="PostHogSinkTests.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using AwesomeAssertions;
 using HoneyDrunk.Telemetry.Abstractions.Models;

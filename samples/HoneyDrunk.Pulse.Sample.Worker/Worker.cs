@@ -1,6 +1,4 @@
-// <copyright file="Worker.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Conventions;
@@ -10,9 +8,9 @@ using System.Diagnostics.Metrics;
 
 namespace HoneyDrunk.Pulse.Sample.Worker;
 
-/// <summary>
+/// <content>
 /// Sample background worker demonstrating HoneyDrunk telemetry instrumentation.
-/// </summary>
+/// </content>
 /// <remarks>
 /// Initializes a new instance of the <see cref="Worker"/> class.
 /// </remarks>

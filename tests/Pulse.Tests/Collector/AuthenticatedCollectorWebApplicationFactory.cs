@@ -1,6 +1,4 @@
-// <copyright file="AuthenticatedCollectorWebApplicationFactory.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Pulse.Collector.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

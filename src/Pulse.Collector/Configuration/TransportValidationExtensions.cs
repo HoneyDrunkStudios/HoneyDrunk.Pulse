@@ -1,6 +1,4 @@
-// <copyright file="TransportValidationExtensions.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Transport.AzureServiceBus.DependencyInjection;
 using HoneyDrunk.Transport.InMemory.DependencyInjection;

@@ -1,6 +1,4 @@
-// <copyright file="TelemetryEventExtensions.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Telemetry.Abstractions.Models;

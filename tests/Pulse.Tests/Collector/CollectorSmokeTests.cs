@@ -1,6 +1,4 @@
-// <copyright file="CollectorSmokeTests.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using AwesomeAssertions;
 using HoneyDrunk.Kernel.Abstractions;
@@ -255,7 +253,7 @@ public class CollectorSmokeTests(CollectorWebApplicationFactory factory) : IClas
     {
         public int ExportCount { get; private set; }
 
-        public Task ExportAsync(ReadOnlyMemory<byte> data, string contentType, CancellationToken cancellationToken = default)
+        public Task ExportAsync(ReadOnlyMemory<byte> traceData, string contentType, CancellationToken cancellationToken = default)
         {
             ExportCount++;
             return Task.CompletedTask;

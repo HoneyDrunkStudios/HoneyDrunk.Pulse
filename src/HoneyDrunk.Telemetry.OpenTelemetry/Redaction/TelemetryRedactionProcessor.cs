@@ -1,6 +1,4 @@
-// <copyright file="TelemetryRedactionProcessor.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using OpenTelemetry;
 using System.Diagnostics;

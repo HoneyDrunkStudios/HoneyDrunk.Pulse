@@ -1,6 +1,4 @@
-// <copyright file="PulseAnalyticsEmitter.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
@@ -51,7 +49,8 @@ public sealed partial class PulseAnalyticsEmitter(
         {
             var request = new AnalyticsRequest
             {
-                Events = [.. eventsList.Select(TelemetryRedactor.RedactTelemetryEvent).Select(e => new AnalyticsEventDto
+                Events = [
+                    .. eventsList.Select(TelemetryRedactor.RedactTelemetryEvent).Select(e => new AnalyticsEventDto
                 {
                     EventName = e.EventName,
                     Timestamp = e.Timestamp,
@@ -63,7 +62,8 @@ public sealed partial class PulseAnalyticsEmitter(
                     TenantId = e.TenantId,
                     Environment = e.Environment,
                     Properties = e.Properties,
-                })],
+                })
+                ],
                 SourceService = _options.ServiceName,
             };
 

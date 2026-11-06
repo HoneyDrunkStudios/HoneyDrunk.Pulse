@@ -1,6 +1,4 @@
-// <copyright file="Program.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Pulse.Sample.Worker;
 using HoneyDrunk.Telemetry.OpenTelemetry.Extensions;

@@ -1,6 +1,4 @@
-// <copyright file="OtlpPayloadRedactor.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using Google.Protobuf;
 using Google.Protobuf.Reflection;

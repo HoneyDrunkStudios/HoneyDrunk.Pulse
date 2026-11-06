@@ -1,6 +1,4 @@
-// <copyright file="PostHogSink.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using HoneyDrunk.Telemetry.Abstractions.Models;
@@ -15,9 +13,9 @@ using System.Text.Json;
 
 namespace HoneyDrunk.Telemetry.Sink.PostHog.Implementation;
 
-/// <summary>
+/// <content>
 /// HTTP-based PostHog analytics sink implementation.
-/// </summary>
+/// </content>
 public sealed partial class PostHogSink : IAnalyticsSink, IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new()

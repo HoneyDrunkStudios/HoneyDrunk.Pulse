@@ -1,6 +1,4 @@
-// <copyright file="OtlpEndpoints.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Pulse.Collector.Ingestion;
 using HoneyDrunk.Telemetry.Abstractions.Models;

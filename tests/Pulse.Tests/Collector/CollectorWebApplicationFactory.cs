@@ -1,6 +1,4 @@
-// <copyright file="CollectorWebApplicationFactory.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Pulse.Collector;
 using Microsoft.AspNetCore.Mvc.Testing;

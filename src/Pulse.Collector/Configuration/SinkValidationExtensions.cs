@@ -1,6 +1,4 @@
-// <copyright file="SinkValidationExtensions.cs" company="HoneyDrunk Studios">
 // Copyright (c) HoneyDrunk Studios. All rights reserved.
-// </copyright>
 
 using HoneyDrunk.Telemetry.Sink.Loki.Options;
 using HoneyDrunk.Telemetry.Sink.Mimir.Options;
