@@ -6,7 +6,7 @@ Open `HoneyDrunk.Pulse.slnx` from the repository root. Production projects live 
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![.NET 11](https://img.shields.io/badge/.NET-11.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/11.0)
 
 > **The Observability Engine for the Hive** — Telemetry abstractions, OpenTelemetry integration, multi-backend sink pipeline, and the Pulse Collector OTLP receiver that powers observability across every HoneyDrunk Grid Node.
 
@@ -160,7 +160,7 @@ HoneyDrunk.Pulse/
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `HoneyDrunk.Pulse.Contracts` | 0.4.1 | Shared event contracts (netstandard2.0 + net8.0 + net10.0) |
+| `HoneyDrunk.Pulse.Contracts` | 0.4.1 | Shared event contracts (netstandard2.0 + net8.0 + net10.0 + net11.0) |
 | `HoneyDrunk.Telemetry.Abstractions` | 0.4.1 | Sink interfaces and telemetry models |
 | `HoneyDrunk.Telemetry.OpenTelemetry` | 0.4.1 | OTel wiring for Grid Nodes |
 | `HoneyDrunk.Telemetry.Sink.Tempo` | 0.4.1 | Grafana Tempo trace sink |

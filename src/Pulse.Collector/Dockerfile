@@ -1,13 +1,13 @@
 # Build context: repository root
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-# CVE-2026-109518: bootstrap Ubuntu's APT fix with retries disabled, as Canonical recommends.
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute AS base
+# Ubuntu 26.04 (Resolute), CVE-2026-109518: bootstrap Ubuntu's APT fix with retries disabled, as Canonical recommends.
 RUN apt-get -o Acquire::Retries=0 update \
     && apt-get -o Acquire::Retries=0 install -y --no-install-recommends --only-upgrade '?source-package(^apt$)' \
-    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' apt)" ge 2.8.4ubuntu0.1 \
-    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg6.0t64)" ge 2.8.4ubuntu0.1 \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' apt)" ge 3.2.1ubuntu0.1 \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg7.0)" ge 3.2.1ubuntu0.1 \
     && rm -rf /var/lib/apt/lists/*
-# Run as a non-root user. mcr.microsoft.com/dotnet/aspnet:10.0 defines APP_UID, but pinning the
+# Run as a non-root user. mcr.microsoft.com/dotnet/aspnet:11.0-resolute defines APP_UID, but pinning the
 # numeric UID explicitly removes the dependency on that base-image detail and prevents the
 # directive from collapsing to USER "" if APP_UID ever becomes unset (CodeQL flags the latter
 # as a hardening risk).
@@ -16,15 +16,18 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0.100-resolute AS build
 # The SDK stage has an independent OS package set and needs the same bootstrap fix.
 RUN apt-get -o Acquire::Retries=0 update \
     && apt-get -o Acquire::Retries=0 install -y --no-install-recommends --only-upgrade '?source-package(^apt$)' \
-    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' apt)" ge 2.8.4ubuntu0.1 \
-    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg6.0t64)" ge 2.8.4ubuntu0.1 \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' apt)" ge 3.2.1ubuntu0.1 \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg7.0)" ge 3.2.1ubuntu0.1 \
     && rm -rf /var/lib/apt/lists/*
 ARG BUILD_CONFIGURATION=Release
+ARG DOTNET_CLI_TELEMETRY_OPTOUT=1
 WORKDIR /workspace
+
+COPY ["global.json", "Directory.Build.props", "."]
 
 COPY ["src/Pulse.Collector/HoneyDrunk.Pulse.Collector.csproj", "src/Pulse.Collector/"]
 COPY ["src/HoneyDrunk.Pulse.Contracts/HoneyDrunk.Pulse.Contracts.csproj", "src/HoneyDrunk.Pulse.Contracts/"]

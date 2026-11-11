@@ -8,7 +8,6 @@ using HoneyDrunk.Vault.Abstractions;
 using HoneyDrunk.Vault.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace HoneyDrunk.Telemetry.Sink.PostHog.Implementation;

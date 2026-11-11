@@ -5,7 +5,6 @@ using HoneyDrunk.Telemetry.Abstractions.Models;
 using HoneyDrunk.Telemetry.OpenTelemetry.Redaction;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Json;
 
 namespace HoneyDrunk.Telemetry.OpenTelemetry;
 

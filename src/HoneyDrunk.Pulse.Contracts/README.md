@@ -1,7 +1,7 @@
 # HoneyDrunk.Pulse.Contracts
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![.NET 11](https://img.shields.io/badge/.NET-11.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/11.0)
 
 > Shared event contracts and DTOs for the HoneyDrunk.Pulse telemetry pipeline.
 
@@ -26,6 +26,7 @@ dotnet add package HoneyDrunk.Pulse.Contracts
 | Framework | Supported |
 |-----------|-----------|
 | .NET 10.0 | ✅ |
+| .NET 11.0 | ✅ |
 | .NET 8.0 | ✅ |
 | .NET Standard 2.0 | ✅ |
 
