@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Packages already identify this public repository; publish that metadata in CI. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+</Project>
