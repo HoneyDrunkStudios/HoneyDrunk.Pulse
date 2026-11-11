@@ -39,6 +39,26 @@ jobs:
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 
+  collector-container:
+    name: Collector Container Smoke
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      IMAGE: pulse-collector-ci:${{ github.sha }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Build Collector image without publishing
+        run: docker build --pull --file src/Pulse.Collector/Dockerfile --tag "$IMAGE" .
+      - name: Smoke test isolated Collector container
+        timeout-minutes: 5
+        run: bash .github/scripts/smoke-collector-container.sh "$IMAGE"
+
   sonarcloud:
     name: SonarQube Cloud
     # Runs on:
@@ -87,7 +107,7 @@ jobs:
 
   pr-status:
     name: PR Status
-    needs: [pr-core, sonarcloud, sonar-findings]
+    needs: [pr-core, collector-container, sonarcloud, sonar-findings]
     if: always() && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -95,6 +115,7 @@ jobs:
       - name: Require eligible checks
         env:
           CORE_RESULT: ${{ needs.pr-core.result }}
+          CONTAINER_RESULT: ${{ needs.collector-container.result }}
           SCANNER_RESULT: ${{ needs.sonarcloud.result }}
           FINDINGS_RESULT: ${{ needs.sonar-findings.result }}
           SAME_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
@@ -103,6 +124,10 @@ jobs:
           set -euo pipefail
           if [[ "$CORE_RESULT" != "success" ]]; then
             echo "::error::PR Core did not succeed ($CORE_RESULT)."
+            exit 1
+          fi
+          if [[ "$CONTAINER_RESULT" != "success" ]]; then
+            echo "::error::Collector container smoke did not succeed ($CONTAINER_RESULT)."
             exit 1
           fi
           if [[ "$SAME_REPOSITORY" == "true" ]]; then

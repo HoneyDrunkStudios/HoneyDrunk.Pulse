@@ -24,6 +24,7 @@ RUN apt-get -o Acquire::Retries=0 update \
     && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libapt-pkg7.0)" ge 3.2.1ubuntu0.1 \
     && rm -rf /var/lib/apt/lists/*
 ARG BUILD_CONFIGURATION=Release
+ARG DOTNET_CLI_TELEMETRY_OPTOUT=1
 WORKDIR /workspace
 
 COPY ["global.json", "."]
