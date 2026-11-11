@@ -11,10 +11,10 @@ telemetry for every Grid Node.
 a dashboarding tool — it routes signals to backends (Tempo, Loki, Mimir, Sentry, PostHog,
 Azure Monitor) with per-sink failure isolation.
 
-This is a **.NET 10.0** solution composed of (selected projects):
+This is a **.NET 11.0** solution composed of (selected projects):
 
 - `HoneyDrunk.Pulse.Contracts` — shared Transport event contracts (multi-target:
-  netstandard2.0 + net8.0 + net10.0); `PulseIngested` lives here
+  netstandard2.0 + net8.0 + net10.0 + net11.0); `PulseIngested` lives here
 - `HoneyDrunk.Telemetry.Abstractions` — sink interfaces (`ITraceSink`, `ILogSink`,
   `IMetricsSink`, `IAnalyticsSink`, `IErrorSink`) and telemetry models
 - `HoneyDrunk.Telemetry.OpenTelemetry` — OTel wiring + Grid context enrichment for Nodes
@@ -30,7 +30,7 @@ line per ADR-0015 (`collector-v*`).
 
 ## Technology Stack
 
-- **Framework:** .NET 10.0 (Contracts multi-targets for downstream consumers)
+- **Framework:** .NET 11.0 (Contracts multi-targets for downstream consumers)
 - **Language:** C# (`LangVersion` latest)
 - **Project Types:** Class libraries + Collector service + samples + xUnit test project
 - **Features Enabled:** Implicit Usings, Nullable Reference Types, primary constructors,
@@ -109,7 +109,7 @@ dotnet build -c Release
 dotnet test -c Release --no-build
 ```
 
-- Targets **.NET 10.0**. Warnings are errors.
+- Targets **.NET 11.0**. Warnings are errors.
 - Tests live only in `Pulse.Tests` — no test code in libraries or the Collector. Prefer
   **xUnit** + **AwesomeAssertions**. Test classes mirror implementation.
 - Tests cover changed behavior; use the existing suite and add meaningful regression cases where needed.
@@ -139,3 +139,5 @@ dotnet test -c Release --no-build
 - For code/build changes, run build + tests locally before pushing; analyzer compliance is mandatory. Documentation-only changes require content and link checks.
 - Respect `.gitignore` / `.gitleaks.toml` / `.trivyignore` — never commit `bin/`, `obj/`,
   or secrets.
+
+Contract-only Abstractions projects retain `net10.0` alongside `net11.0` for existing consumers. Runtime, hosts, samples and tests use .NET 11.

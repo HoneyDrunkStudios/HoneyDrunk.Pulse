@@ -6,7 +6,6 @@ using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Telemetry.Abstractions.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
-using System.Net.Http.Json;
 using System.Text;
 
 namespace HoneyDrunk.Pulse.Tests.Collector;
