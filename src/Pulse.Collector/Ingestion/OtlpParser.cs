@@ -39,6 +39,9 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
     /// </summary>
     private const int ErrorSeverityThreshold = 17;
 
+    private const string StringValueKey = "stringValue";
+    private const string ScopeLogsKey = "scopeLogs";
+    private const string LogRecordsKey = "logRecords";
     private const string AttributesKey = "attributes";
     private const string ResourceLogsKey = "resourceLogs";
     private const string ExceptionTypeKey = "exception.type";
@@ -379,7 +382,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             return null;
         }
 
-        if (value.TryGetProperty("stringValue", out var stringVal))
+        if (value.TryGetProperty(StringValueKey, out var stringVal))
         {
             return stringVal.GetString();
         }
@@ -453,8 +456,8 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 .Where(attr => attr.TryGetProperty("key", out var key) &&
                     key.GetString()?.Equals("service.name", StringComparison.OrdinalIgnoreCase) == true &&
                     attr.TryGetProperty("value", out var value) &&
-                    value.TryGetProperty("stringValue", out _))
-                .Select(attr => attr.GetProperty("value").GetProperty("stringValue").GetString())
+                    value.TryGetProperty(StringValueKey, out _))
+                .Select(attr => attr.GetProperty("value").GetProperty(StringValueKey).GetString())
                 .OfType<string>()
                 .Where(serviceName => !string.IsNullOrWhiteSpace(serviceName));
             names.UnionWith(serviceNames);
@@ -710,7 +713,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         // Get message from body
         string? message = null;
         if (logRecord.TryGetProperty("body", out var body) &&
-            body.TryGetProperty("stringValue", out var strVal))
+            body.TryGetProperty(StringValueKey, out var strVal))
         {
             message = strVal.GetString();
         }
@@ -936,12 +939,12 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             if (root.TryGetProperty(ResourceLogsKey, out var resourceLogs))
             {
                 foreach (var scopeLogs in resourceLogs.EnumerateArray()
-                    .Where(resourceLog => resourceLog.TryGetProperty("scopeLogs", out _))
-                    .Select(resourceLog => resourceLog.GetProperty("scopeLogs")))
+                    .Where(resourceLog => resourceLog.TryGetProperty(ScopeLogsKey, out _))
+                    .Select(resourceLog => resourceLog.GetProperty(ScopeLogsKey)))
                 {
                     foreach (var logRecords in scopeLogs.EnumerateArray()
-                        .Where(scopeLog => scopeLog.TryGetProperty("logRecords", out _))
-                        .Select(scopeLog => scopeLog.GetProperty("logRecords")))
+                        .Where(scopeLog => scopeLog.TryGetProperty(LogRecordsKey, out _))
+                        .Select(scopeLog => scopeLog.GetProperty(LogRecordsKey)))
                     {
                         logCount += logRecords.GetArrayLength();
                     }
@@ -1156,14 +1159,14 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             {
                 var serviceName = ExtractServiceNameFromResource(resourceLog);
 
-                if (!resourceLog.TryGetProperty("scopeLogs", out var scopeLogs))
+                if (!resourceLog.TryGetProperty(ScopeLogsKey, out var scopeLogs))
                 {
                     continue;
                 }
 
                 foreach (var scopeLog in scopeLogs.EnumerateArray())
                 {
-                    if (!scopeLog.TryGetProperty("logRecords", out var logRecords))
+                    if (!scopeLog.TryGetProperty(LogRecordsKey, out var logRecords))
                     {
                         continue;
                     }
@@ -1215,14 +1218,14 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             foreach (var resourceLog in resourceLogs.EnumerateArray())
             {
-                if (!resourceLog.TryGetProperty("scopeLogs", out var scopeLogs))
+                if (!resourceLog.TryGetProperty(ScopeLogsKey, out var scopeLogs))
                 {
                     continue;
                 }
 
                 foreach (var scopeLog in scopeLogs.EnumerateArray())
                 {
-                    if (!scopeLog.TryGetProperty("logRecords", out var logRecords))
+                    if (!scopeLog.TryGetProperty(LogRecordsKey, out var logRecords))
                     {
                         continue;
                     }
