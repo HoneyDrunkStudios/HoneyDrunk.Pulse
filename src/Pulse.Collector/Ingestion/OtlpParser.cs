@@ -39,6 +39,9 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
     /// </summary>
     private const int ErrorSeverityThreshold = 17;
 
+    private const string StringValueKey = "stringValue";
+    private const string ScopeLogsKey = "scopeLogs";
+    private const string LogRecordsKey = "logRecords";
     private const string AttributesKey = "attributes";
     private const string ResourceLogsKey = "resourceLogs";
     private const string ExceptionTypeKey = "exception.type";
@@ -379,7 +382,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             return null;
         }
 
-        if (value.TryGetProperty("stringValue", out var stringVal))
+        if (value.TryGetProperty(StringValueKey, out var stringVal))
         {
             return stringVal.GetString();
         }
@@ -449,20 +452,15 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                 continue;
             }
 
-            foreach (var attr in attributes.EnumerateArray())
-            {
-                if (attr.TryGetProperty("key", out var key) &&
+            var serviceNames = attributes.EnumerateArray()
+                .Where(attr => attr.TryGetProperty("key", out var key) &&
                     key.GetString()?.Equals("service.name", StringComparison.OrdinalIgnoreCase) == true &&
                     attr.TryGetProperty("value", out var value) &&
-                    value.TryGetProperty("stringValue", out var stringValue))
-                {
-                    var serviceName = stringValue.GetString();
-                    if (!string.IsNullOrWhiteSpace(serviceName))
-                    {
-                        names.Add(serviceName);
-                    }
-                }
-            }
+                    value.TryGetProperty(StringValueKey, out _))
+                .Select(attr => attr.GetProperty("value").GetProperty(StringValueKey).GetString())
+                .OfType<string>()
+                .Where(serviceName => !string.IsNullOrWhiteSpace(serviceName));
+            names.UnionWith(serviceNames);
         }
     }
 
@@ -715,7 +713,7 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
         // Get message from body
         string? message = null;
         if (logRecord.TryGetProperty("body", out var body) &&
-            body.TryGetProperty("stringValue", out var strVal))
+            body.TryGetProperty(StringValueKey, out var strVal))
         {
             message = strVal.GetString();
         }
@@ -856,17 +854,15 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             // Navigate: resourceSpans -> scopeSpans -> spans
             if (root.TryGetProperty("resourceSpans", out var resourceSpans))
             {
-                foreach (var resourceSpan in resourceSpans.EnumerateArray())
+                foreach (var scopeSpans in resourceSpans.EnumerateArray()
+                    .Where(resourceSpan => resourceSpan.TryGetProperty("scopeSpans", out _))
+                    .Select(resourceSpan => resourceSpan.GetProperty("scopeSpans")))
                 {
-                    if (resourceSpan.TryGetProperty("scopeSpans", out var scopeSpans))
+                    foreach (var spans in scopeSpans.EnumerateArray()
+                        .Where(scopeSpan => scopeSpan.TryGetProperty("spans", out _))
+                        .Select(scopeSpan => scopeSpan.GetProperty("spans")))
                     {
-                        foreach (var scopeSpan in scopeSpans.EnumerateArray())
-                        {
-                            if (scopeSpan.TryGetProperty("spans", out var spans))
-                            {
-                                spanCount += spans.GetArrayLength();
-                            }
-                        }
+                        spanCount += spans.GetArrayLength();
                     }
                 }
             }
@@ -900,17 +896,15 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             // Navigate: resourceMetrics -> scopeMetrics -> metrics
             if (root.TryGetProperty("resourceMetrics", out var resourceMetrics))
             {
-                foreach (var resourceMetric in resourceMetrics.EnumerateArray())
+                foreach (var scopeMetrics in resourceMetrics.EnumerateArray()
+                    .Where(resourceMetric => resourceMetric.TryGetProperty("scopeMetrics", out _))
+                    .Select(resourceMetric => resourceMetric.GetProperty("scopeMetrics")))
                 {
-                    if (resourceMetric.TryGetProperty("scopeMetrics", out var scopeMetrics))
+                    foreach (var metrics in scopeMetrics.EnumerateArray()
+                        .Where(scopeMetric => scopeMetric.TryGetProperty("metrics", out _))
+                        .Select(scopeMetric => scopeMetric.GetProperty("metrics")))
                     {
-                        foreach (var scopeMetric in scopeMetrics.EnumerateArray())
-                        {
-                            if (scopeMetric.TryGetProperty("metrics", out var metrics))
-                            {
-                                metricCount += metrics.GetArrayLength();
-                            }
-                        }
+                        metricCount += metrics.GetArrayLength();
                     }
                 }
             }
@@ -944,17 +938,15 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             // Navigate: resourceLogs -> scopeLogs -> logRecords
             if (root.TryGetProperty(ResourceLogsKey, out var resourceLogs))
             {
-                foreach (var resourceLog in resourceLogs.EnumerateArray())
+                foreach (var scopeLogs in resourceLogs.EnumerateArray()
+                    .Where(resourceLog => resourceLog.TryGetProperty(ScopeLogsKey, out _))
+                    .Select(resourceLog => resourceLog.GetProperty(ScopeLogsKey)))
                 {
-                    if (resourceLog.TryGetProperty("scopeLogs", out var scopeLogs))
+                    foreach (var logRecords in scopeLogs.EnumerateArray()
+                        .Where(scopeLog => scopeLog.TryGetProperty(LogRecordsKey, out _))
+                        .Select(scopeLog => scopeLog.GetProperty(LogRecordsKey)))
                     {
-                        foreach (var scopeLog in scopeLogs.EnumerateArray())
-                        {
-                            if (scopeLog.TryGetProperty("logRecords", out var logRecords))
-                            {
-                                logCount += logRecords.GetArrayLength();
-                            }
-                        }
+                        logCount += logRecords.GetArrayLength();
                     }
                 }
             }
@@ -1088,13 +1080,9 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
                         continue;
                     }
 
-                    foreach (var span in spans.EnumerateArray())
+                    foreach (var errorSpan in spans.EnumerateArray().Select(span => TryExtractErrorSpan(span, serviceName)).OfType<ExtractedErrorSpan>())
                     {
-                        var errorSpan = TryExtractErrorSpan(span, serviceName);
-                        if (errorSpan != null)
-                        {
-                            errorSpans.Add(errorSpan);
-                        }
+                        errorSpans.Add(errorSpan);
                     }
                 }
             }
@@ -1128,13 +1116,9 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
                 foreach (var scopeSpan in resourceSpan.ScopeSpans)
                 {
-                    foreach (var span in scopeSpan.Spans)
+                    foreach (var errorSpan in scopeSpan.Spans.Select(span => TryExtractErrorSpanFromProto(span, serviceName)).OfType<ExtractedErrorSpan>())
                     {
-                        var errorSpan = TryExtractErrorSpanFromProto(span, serviceName);
-                        if (errorSpan != null)
-                        {
-                            errorSpans.Add(errorSpan);
-                        }
+                        errorSpans.Add(errorSpan);
                     }
                 }
             }
@@ -1175,25 +1159,21 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
             {
                 var serviceName = ExtractServiceNameFromResource(resourceLog);
 
-                if (!resourceLog.TryGetProperty("scopeLogs", out var scopeLogs))
+                if (!resourceLog.TryGetProperty(ScopeLogsKey, out var scopeLogs))
                 {
                     continue;
                 }
 
                 foreach (var scopeLog in scopeLogs.EnumerateArray())
                 {
-                    if (!scopeLog.TryGetProperty("logRecords", out var logRecords))
+                    if (!scopeLog.TryGetProperty(LogRecordsKey, out var logRecords))
                     {
                         continue;
                     }
 
-                    foreach (var logRecord in logRecords.EnumerateArray())
+                    foreach (var errorLog in logRecords.EnumerateArray().Select(logRecord => TryExtractErrorLogFromJson(logRecord, serviceName)).OfType<ExtractedErrorLog>())
                     {
-                        var errorLog = TryExtractErrorLogFromJson(logRecord, serviceName);
-                        if (errorLog != null)
-                        {
-                            errorLogs.Add(errorLog);
-                        }
+                        errorLogs.Add(errorLog);
                     }
                 }
             }
@@ -1238,26 +1218,25 @@ public sealed partial class OtlpParser(ILogger<OtlpParser> logger)
 
             foreach (var resourceLog in resourceLogs.EnumerateArray())
             {
-                if (!resourceLog.TryGetProperty("scopeLogs", out var scopeLogs))
+                if (!resourceLog.TryGetProperty(ScopeLogsKey, out var scopeLogs))
                 {
                     continue;
                 }
 
                 foreach (var scopeLog in scopeLogs.EnumerateArray())
                 {
-                    if (!scopeLog.TryGetProperty("logRecords", out var logRecords))
+                    if (!scopeLog.TryGetProperty(LogRecordsKey, out var logRecords))
                     {
                         continue;
                     }
 
-                    foreach (var logRecord in logRecords.EnumerateArray())
+                    var severities = logRecords.EnumerateArray()
+                        .Where(logRecord => logRecord.TryGetProperty("severityNumber", out var sevNum) &&
+                            sevNum.TryGetInt32(out _))
+                        .Select(logRecord => logRecord.GetProperty("severityNumber").GetInt32());
+                    foreach (var severity in severities)
                     {
-                        if (logRecord.TryGetProperty("severityNumber", out var sevNum) &&
-                            sevNum.TryGetInt32(out var severity) &&
-                            severity > maxSeverity)
-                        {
-                            maxSeverity = severity;
-                        }
+                        maxSeverity = Math.Max(maxSeverity, severity);
                     }
                 }
             }
