@@ -92,6 +92,7 @@ public sealed class AuthenticatedCollectorWebApplicationFactory : CollectorWebAp
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
+        using var signingKey = disposing ? _signingKey : null;
         try
         {
             base.Dispose(disposing);
@@ -103,7 +104,6 @@ public sealed class AuthenticatedCollectorWebApplicationFactory : CollectorWebAp
                 Environment.SetEnvironmentVariable(RequireAuthenticationVariable, _previousRequireAuthentication);
                 Environment.SetEnvironmentVariable(AuthorityVariable, _previousAuthority);
                 Environment.SetEnvironmentVariable(AudienceVariable, _previousAudience);
-                _signingKey.Dispose();
             }
         }
     }

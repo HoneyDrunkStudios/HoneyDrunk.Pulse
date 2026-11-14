@@ -37,13 +37,15 @@ public class OtlpAuthenticationTests(AuthenticatedCollectorWebApplicationFactory
     public async Task IngestionEndpoint_MissingOrMalformedToken_ReturnsUnauthorized(string path)
     {
         using var client = factory.CreateClient();
-        foreach (var token in new[] { null, "not-a-jwt" })
+        foreach (var request in new[] { null, "not-a-jwt" }.Select(token => CreateRequest(path, token)))
         {
-            using var request = CreateRequest(path, token);
-            using var response = await client.SendAsync(request);
+            using (request)
+            {
+                using var response = await client.SendAsync(request);
 
-            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-            response.Headers.WwwAuthenticate.Should().Contain(challenge => challenge.Scheme == "Bearer");
+                response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+                response.Headers.WwwAuthenticate.Should().Contain(challenge => challenge.Scheme == "Bearer");
+            }
         }
     }
 
@@ -95,12 +97,14 @@ public class OtlpAuthenticationTests(AuthenticatedCollectorWebApplicationFactory
             factory.CreateAccessToken(useUntrustedKey: true),
         };
 
-        foreach (var token in tokens)
+        foreach (var request in tokens.Select(token => CreateRequest(path, token)))
         {
-            using var request = CreateRequest(path, token);
-            using var response = await client.SendAsync(request);
+            using (request)
+            {
+                using var response = await client.SendAsync(request);
 
-            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+                response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            }
         }
     }
 
