@@ -27,7 +27,7 @@ ARG BUILD_CONFIGURATION=Release
 ARG DOTNET_CLI_TELEMETRY_OPTOUT=1
 WORKDIR /workspace
 
-COPY ["global.json", "Directory.Build.props", "."]
+COPY ["global.json", "Directory.Build.props", "./"]
 
 COPY ["src/Pulse.Collector/HoneyDrunk.Pulse.Collector.csproj", "src/Pulse.Collector/"]
 COPY ["src/HoneyDrunk.Pulse.Contracts/HoneyDrunk.Pulse.Contracts.csproj", "src/HoneyDrunk.Pulse.Contracts/"]
